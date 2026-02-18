@@ -1,0 +1,89 @@
+# TASKS.md — Alumni Platform
+
+> Fichier de suivi vivant. Mis à jour après chaque session de travail.
+> Indique toujours la "prochaine étape" pour l'agent.
+
+## État Actuel du Projet
+
+**Phase :** 🚧 Initialisation  
+**Dernière mise à jour :** 2026-02-18
+
+---
+
+## ✅ Terminé
+
+- [x] Conception du produit (`ai_docs/concept.md`)
+- [x] Documentation architecture (`ai_docs/architecture.md`)
+- [x] Documentation base de données (`ai_docs/database.md`)
+- [x] Documentation patterns de code (`ai_docs/patterns.md`)
+- [x] Documentation services (`ai_docs/services.md`)
+- [x] `GEMINI.md` créé à la racine
+- [x] `docs/TASKS.md` créé
+- [x] Méthodologie PRP (`concept_library/cc_PRP_flow/`)
+- [x] Commandes Gemini CLI (`.gemini/commands/`)
+- [x] PRP d'initialisation créé (`PRPs/project-setup.md`)
+
+---
+
+## 🔄 En Cours
+
+- [ ] **Exécuter le PRP d'initialisation** via Gemini CLI
+
+---
+
+## 📋 Backlog (Par Ordre de Priorité)
+
+### Phase 1 — Setup & Infrastructure
+- [ ] Initialisation du monorepo (structure de dossiers)
+- [ ] `docker-compose.yml` principal (mysql, redis, server, client, nginx)
+- [ ] `docker-compose.dev.yml` (hot reload pour dev)
+- [ ] Dockerfiles (client Angular, server NestJS)
+- [ ] Config Nginx (reverse proxy)
+- [ ] Variables d'environnement (`.env.example`)
+- [ ] ESLint configuré (client + server)
+- [ ] Prettier configuré (client + server, config commune)
+
+### Phase 2 — Backend Foundation
+- [ ] Initialisation NestJS avec modules de base
+- [ ] Module `auth` (JWT Strategy, Guards, Login/Register)
+- [ ] Module `users` (Entity, Service, Controller)
+- [ ] Migration Sequelize : table `users`
+- [ ] Migration Sequelize : table `alumni_profiles`
+- [ ] Migration Sequelize : tables `job_offers`, `events`, `event_registrations`
+- [ ] Migration Sequelize : tables `conversations`, `messages`
+
+### Phase 3 — Frontend Foundation
+- [ ] Initialisation Angular avec routing
+- [ ] Layout global (Header, Sidebar)
+- [ ] Module `auth` (pages Login/Register)
+- [ ] Guards Angular (authGuard, roleGuard)
+- [ ] Interceptor HTTP (authInterceptor — attacher le token JWT)
+
+### Phase 4 — Features Backoffice Admin
+- [ ] Dashboard Analytics (KPIs, Charts)
+- [ ] Gestion Alumni CRUD (liste, détail, édition)
+- [ ] Import CSV (upload + validation)
+
+### Phase 5 — Pipeline de Scraping
+- [ ] Module `scraping` NestJS
+- [ ] Producer BullMQ (ajout à la queue)
+- [ ] Consumer/Processor Puppeteer (scraping LinkedIn)
+- [ ] Gestion des erreurs et retry
+
+### Phase 6 — Portail Alumni
+- [ ] Annuaire (vue restreinte)
+- [ ] Job Board (liste + candidature)
+- [ ] Events Board (liste + inscription)
+- [ ] Messagerie interne (conversations + messages)
+
+---
+
+## 🚀 Prochaine Étape
+
+**Exécuter le PRP d'initialisation** dans Gemini CLI :
+
+```bash
+gemini
+# Puis :
+> Lis GEMINI.md et ai_docs/, puis implémente le PRP PRPs/project-setup.md
+```
