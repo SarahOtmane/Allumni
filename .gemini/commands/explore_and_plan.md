@@ -1,0 +1,110 @@
+---
+description: Explorer le codebase, créer un plan d'implémentation, coder et tester selon le workflow EPCT
+---
+
+# Explore, Plan, Code, Test Workflow
+
+À la fin de ce message, je vais te demander de faire quelque chose.
+Suis le workflow **Explore → Plan → Code → Test** depuis le début.
+
+## Explore
+
+En premier, lis tous les fichiers qui peuvent être utiles pour implémenter le ticket,
+que ce soit comme exemples ou comme cibles de modification.
+
+**Fichiers à lire obligatoirement avant de commencer :**
+- `GEMINI.md` — règles absolues du projet, commandes Docker, conventions
+- `ai_docs/architecture.md` — stack technique et structure des dossiers
+- `ai_docs/database.md` — schéma MySQL et conventions Sequelize
+- `ai_docs/patterns.md` — patterns NestJS (Controller/Service/DTO) et Angular (Signals/Standalone)
+- `ai_docs/services.md` — services métier disponibles
+- `docs/TASKS.md` — état d'avancement actuel
+
+**Puis explorer le codebase :**
+- Identifier les fichiers similaires à la feature à implémenter
+- Repérer les patterns existants à reproduire (ne pas réinventer)
+- Cartographier les fichiers à créer et ceux à modifier
+
+> ⚠️ Pas d'exploration = hallucination de la structure. Ne jamais écrire une ligne de code avant cette étape.
+
+## Plan
+
+Ensuite, réfléchis et rédige un plan d'implémentation détaillé incluant :
+- Les fichiers backend à créer (Controller, Service, DTO, Model, Module)
+- Les migrations Sequelize nécessaires
+- Les composants Angular à créer (Smart/Dumb)
+- Les services Angular et leur logique
+- Les Guards et interceptors impactés
+
+Si des points sont incertains, fais des recherches complémentaires sur :
+- La documentation officielle de la lib concernée
+- Les versions exactes utilisées (Angular 17, NestJS 10, Sequelize 6, MySQL 8)
+
+**Si tu as des questions ou des ambiguïtés, pause ici et demande à l'utilisateur avant de continuer.**
+
+> La commande `/plan` force cette pause de planification.
+
+## Code
+
+Quand le plan est validé, commence à écrire le code.
+
+**Règles à respecter :**
+- Suivre fidèlement les patterns de `ai_docs/patterns.md`
+- Utiliser `singleQuote`, `trailingComma`, `printWidth: 100` (config Prettier du projet)
+- Nommer les variables et méthodes clairement (pas de commentaires pour compenser un mauvais nommage)
+- Créer les DTOs avec `class-validator` sur tous les inputs
+- Appliquer `@UseGuards(JwtAuthGuard, RolesGuard)` + `@Roles(...)` sur les routes protégées
+- Composants Angular : `standalone: true`, `inject()` au lieu du constructeur
+
+**Après avoir codé, vérifier via Docker :**
+```bash
+docker compose exec server npm run lint
+docker compose exec client npm run lint
+docker compose exec server npm run format
+docker compose exec client npm run format
+```
+
+## Test
+
+Vérifier que tout fonctionne via Docker :
+
+```bash
+# Vérifier la compilation TypeScript
+docker compose exec server npm run build
+docker compose exec client npx ng build
+
+# Lancer les tests unitaires
+docker compose exec server npm run test
+docker compose exec client npx ng test --watch=false
+```
+
+**Si les changements touchent l'UX :**
+- Vérifier dans le navigateur à `http://localhost:4200`
+- Tester les routes protégées avec et sans token JWT
+- Vérifier les rôles (ADMIN, STAFF, ALUMNI) sur les endpoints concernés
+- Tester les cas d'erreur (404, 401, 400 avec DTO invalide)
+
+Si les tests échouent, retourner à l'étape Plan et re-réfléchir.
+
+## Write Up
+
+Quand le travail est satisfaisant, rédiger un court rapport utilisable comme description de PR :
+
+```markdown
+## Ce qui a été fait
+[Description de la feature implémentée]
+
+## Choix techniques
+[Décisions prises et leur justification]
+
+## Fichiers créés / modifiés
+[Liste des fichiers]
+
+## Commandes utiles
+[Commandes Docker à connaître pour cette feature]
+
+## Tests effectués
+[Ce qui a été testé et les résultats]
+```
+
+Mettre à jour `docs/TASKS.md` pour marquer la tâche comme ✅ Terminée.
