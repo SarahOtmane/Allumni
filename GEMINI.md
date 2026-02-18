@@ -56,10 +56,9 @@ alumni-platform/
 ├── docker-compose.yml
 ├── docker-compose.dev.yml
 ├── GEMINI.md                      # Ce fichier
-├── .gemini/
-│   └── commands/                  # Commandes personnalisées Gemini CLI
-│       ├── create-prp.md          # /create-prp
-│       └── explore-and-plan.md    # /explore-and-plan
+├── commands/                  # Commandes personnalisées Gemini CLI
+│   ├── create-prp.md          # /create-prp
+│   └── explore-and-plan.md    # /explore-and-plan
 ├── ai_docs/                       # Documentation IA (lire avant de coder)
 │   ├── concept.md
 │   ├── architecture.md
