@@ -1,0 +1,126 @@
+# Create PRP (Product Requirement Prompt)
+
+Tu as pour mission de créer un PRP complet pour une nouvelle feature de la plateforme Alumni.
+
+## What is a PRP?
+
+Un PRP (Product Requirement Prompt) est un document structuré qui fournit à un agent IA tout ce dont il a besoin pour livrer du code production-ready du premier coup. Il combine :
+- **Les exigences produit** (quoi construire et pourquoi)
+- **L'intelligence du codebase** (patterns existants, fichiers à référencer)
+- **Les détails d'implémentation** (comment construire)
+- **Les critères de validation** (comment vérifier que ça fonctionne)
+
+## Research Process
+
+Avant de créer le PRP, effectue une recherche approfondie :
+
+### 1. Documentation Review
+- Lire `GEMINI.md` pour les conventions et règles absolues du projet
+- Lire tous les fichiers `ai_docs/` pour le contexte technique :
+  - `ai_docs/architecture.md` — Stack & structure des dossiers
+  - `ai_docs/database.md` — Schéma MySQL, conventions Sequelize
+  - `ai_docs/patterns.md` — Patterns NestJS & Angular à suivre
+  - `ai_docs/services.md` — Services métier disponibles
+  - `ai_docs/concept.md` — Vision produit & rôles utilisateurs
+- Lire `docs/TASKS.md` pour connaître l'état d'avancement actuel
+
+### 2. Codebase Exploration
+- Identifier les features similaires déjà implémentées
+- Trouver les fichiers existants à référencer (controllers, services, components)
+- Comprendre les patterns et conventions en place
+- Cartographier les zones du code impactées
+
+### 3. Web Research (si nécessaire)
+- Rechercher la documentation des libs concernées
+- Trouver les best practices pour ce type de feature
+- Vérifier la compatibilité avec les versions utilisées (Angular 17, NestJS 10, Sequelize 6)
+
+### 4. Template Reference
+- Utiliser `concept_library/cc_PRP_flow/PRPs/base_template_v1.md` comme guide structurel
+
+## PRP Output Structure
+
+Créer le fichier PRP dans `PRPs/[feature-name].md` en suivant cette structure :
+
+```markdown
+# [Feature Name] PRP
+
+## Goal
+[Une phrase claire décrivant ce qu'on construit]
+
+## Why
+[Justification métier — qui en bénéficie et comment]
+
+## What
+[Description détaillée de la feature]
+- Scope (inclus / exclus)
+- User stories
+
+## Technical Context
+
+### Files to Reference (Read-Only)
+| File | Purpose |
+|------|---------|
+| `ai_docs/patterns.md` | Patterns NestJS & Angular à suivre |
+| `path/to/existing.ts` | [Pourquoi ce fichier est pertinent] |
+
+### Files to Implement/Modify
+| File | Action | Description |
+|------|--------|-------------|
+| `server/src/modules/x/x.controller.ts` | CREATE | Controller avec Guards |
+| `client/src/app/features/x/page.component.ts` | CREATE | Smart Component |
+
+### Existing Patterns to Follow
+[Extraits de code du codebase à reproduire fidèlement]
+
+## Implementation Details
+
+### API Endpoints
+[Specs des endpoints NestJS avec request/response]
+
+### Database Changes
+[Migrations Sequelize + schéma MySQL si nécessaire]
+
+### Angular Components
+[Composants à créer (Smart/Dumb) avec leurs inputs/outputs]
+
+## Validation Criteria
+
+### Functional Requirements
+- [ ] [Requirement testable 1]
+- [ ] [Requirement testable 2]
+
+### Technical Requirements
+- [ ] TypeScript compile : `docker compose exec server npm run build`
+- [ ] TypeScript compile : `docker compose exec client npx ng build`
+- [ ] ESLint passe : `docker compose exec server npm run lint`
+- [ ] ESLint passe : `docker compose exec client npm run lint`
+- [ ] Aucune console.error dans le navigateur
+
+### Security Checklist
+- [ ] `@UseGuards(JwtAuthGuard, RolesGuard)` sur les controllers
+- [ ] `@Roles(...)` défini sur chaque route
+- [ ] DTOs avec `class-validator` sur tous les inputs
+- [ ] Guard Angular sur les routes protégées côté client
+
+### Testing Steps
+1. [Étape 1 — comment tester]
+2. [Étape 2 — résultat attendu]
+3. [Étape 3 — cas limite à vérifier]
+```
+
+## User Confirmation
+
+Avant de finaliser le PRP, confirmer avec l'utilisateur :
+1. Le scope est correct
+2. L'approche correspond aux attentes
+3. Aucune exigence manquante
+
+Si l'utilisateur dit "continue" ou confirme, sauvegarder le PRP dans `PRPs/[feature-name].md`
+et mettre à jour `docs/TASKS.md` pour marquer la tâche "PRP créé".
+
+---
+
+**Input :** $ARGUMENTS
+
+Décris la feature que tu veux implémenter. Je vais explorer le codebase et créer un PRP complet.
