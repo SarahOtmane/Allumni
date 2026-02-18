@@ -30,7 +30,7 @@ L'application gère trois rôles distincts avec des permissions granulaires :
 
 La solution est composée de deux interfaces web distinctes :
 
-- **Backoffice Admin :** Une application web sécurisée destinée à l'administration de l'école. Elle centralise la gestion des données, le content management et l'analyse statistique.
+- **Backoffice Admin :** Une application web sécurisée destinée à l'administration de l'école. Elle centralise la gestion des données, le content management et l'analyse statistique (Tableaux de données, Dashboard stats, Logs d'import).
 - **Portail Alumni :** Une plateforme communautaire pour les anciens élèves, axée sur le networking, les opportunités et le contenu partagé par l'école.
 
 ## 4. Fonctionnalités Clés
@@ -47,31 +47,20 @@ La solution est composée de deux interfaces web distinctes :
 
 ## 5. Flux de Données Principal : Le Pipeline d'Enrichissement
 
-Le cœur de la plateforme réside dans son pipeline de traitement de données automatisé.
+Le cœur de la plateforme réside dans son pipeline de traitement de données automatisé.Elle est conçue de manière asynchrone pour gérer la charge.
 
-1.  **Phase 1 : Import**
+1.  **Phase 1 : Import (Trigger)**
     - L'Admin `School Admin` upload un fichier CSV contenant la liste des étudiants.
     - **Champs requis :** `Nom`, `Prénom`, `Email`, `URL LinkedIn`, `Promotion`, `Diplôme`.
 
-2.  **Phase 2 : Enrichissement (Scraping)**
+2.  **Phase 2 : Mise en file (Queue)**
+    - Le backend ne traite pas tout immédiatement. Il valide le fichier et ajoute chaque ligne dans une File d'attente (Redis/BullMQ).
+
+2.  **Phase 2 : Enrichissement - Scraping (Worker)**
     - Un service automatisé (worker) parcourt les URL LinkedIn fournies.
     - Il extrait des informations publiques clés : `Poste actuel` et `Statut` (En poste, En recherche active, etc.).
     - Ce processus doit être conçu pour être résilient et gérer les erreurs (profils privés, URL invalides).
 
-3.  **Phase 3 : Mise à Jour**
+3.  **Phase 3 : Mise à Jour (Persistence)**
     - La base de données de la plateforme est automatiquement mise à jour avec les données fraîchement collectées.
     - Un historique des postes peut être conservé pour suivre l'évolution de carrière.
-
-## 6. Stack Technique Suggérée
-
-Conformément à l'architecture établie pour le projet :
-
-- **Frontend :** `Angular v17+` (Standalone Components, Signals)
-- **Styling :** `Tailwind CSS v3.4+`
-- **Backend :** `NestJS v10` (Architecture modulaire)
-- **Base de Données :** `MySQL v8.0` (Hébergée via Docker)
-- **ORM :** `Sequelize v6` (`sequelize-typescript`)
-- **Queueing :** `BullMQ + Redis` (Pour le traitement asynchrone du scraping)
-- **Infrastructure :** `Docker & Docker Compose` (Conteneurisation pour déploiement VPS OVH)
-- **Web Server :** `Nginx` (Reverse Proxy & Gestion SSL via Certbot)
-- **Pipeline de Données (Scraping) :** `Puppeteer` (intégré au worker NestJS)
