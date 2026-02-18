@@ -1,14 +1,67 @@
-# Architecture Allumni
+# Architecture Alumni Platform
 
 ## Stack Technique
 
-| Layer | Technology |
-|-------|------------|
-| Frontend | Next.js 15.5.9 (App Router) + React 19 |
-| Styling | Tailwind CSS 4 |
-| UI Components | Radix UI + shadcn/ui patterns |
-| Backend | Supabase (PostgreSQL 15 + Auth + Realtime) |
-| Edge Functions | Supabase Edge Functions (Deno) |
-| Messaging | WhatsApp Business API (Twilio) |
-| AI | Groq API (llama-3.1-8b-instant) |
-| Maps | Leaflet + react-leaflet |
+| Couche | Technologie | Détails / Version |
+|---|---|---|
+| **Frontend** | **Angular** | v17+ (Standalone Components, Signals) |
+| **Styling** | **Tailwind CSS** | v3.4+ (Configuré via PostCSS) |
+| **Backend** | **NestJS** | v10 (Architecture modulaire) |
+| **Base de Données** | **MySQL** | v8.0 (Hébergée via Docker) |
+| **ORM** | **Sequelize** | v6 (`sequelize-typescript`) |
+| **Queueing** | **BullMQ + Redis** | Pour le traitement asynchrone du scraping |
+| **Infrastructure** | **Docker & Docker Compose** | Conteneurisation pour déploiement VPS OVH |
+| **Web Server** | **Nginx** | Reverse Proxy & Gestion SSL (Certbot) |
+
+## Structure des Dossiers (Monorepo)
+
+alumni-platform/
+├── client/                     # Application Angular
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── core/           # Services Singleton, Interceptors, Guards
+│   │   │   ├── shared/         # UI Components, Pipes, Directives
+│   │   │   ├── layout/         # Header, Sidebar, Footer
+│   │   │   ├── features/       # Modules Métiers (Lazy Loaded)
+│   │   │   │   ├── auth/       # Login, Register
+│   │   │   │   ├── admin/      # Backoffice (Dashboard, Users, Import)
+│   │   │   │   ├── alumni/     # Portail (Annuaire, Jobs, Events)
+│   │   │   │   └── profile/    # Gestion profil utilisateur
+│   │   │   └── app.routes.ts
+│   │   └── environments/
+│   └── tailwind.config.js
+│
+├── server/                     # Application NestJS
+│   ├── src/
+│   │   ├── modules/            # Modules par domaine
+│   │   │   ├── auth/           # JWT Strategy, Guards
+│   │   │   ├── users/          # User Entity, Services
+│   │   │   ├── alumni/         # Profils spécifiques & Data
+│   │   │   ├── scraping/       # Logique d'import CSV & Queue
+│   │   │   └── content/        # Jobs, Events
+│   │   ├── common/             # Decorators, DTOs partagés, Filters
+│   │   ├── config/             # Config Sequelize & Env
+│   │   └── main.ts
+│   └── .env
+│
+├── docker-compose.yml          # Orchestration Prod & Dev
+└── ai_docs/                    # Documentation IA (ce dossier)
+
+## Portails par Rôle
+| Rôle | Route | Scope Données | Permissions |
+|------|-------|-------|-------|
+| School Admin | `/admin/*` | Global | CRUD complet, Import CSV, Gestion Contenu |
+| School Staff | `/admin/*` | Global | Lecture seule (Alumni, Stats) |
+| Alumni | `/portal/*` | Restreint | Annuaire (Vue limitée), Jobs, Events, Chat |
+
+## Sécurité & Pipeline
+
+### Authentification
+- JWT (JSON Web Tokens) : Utilisé pour sécuriser toutes les requêtes API.
+- Guards NestJS : @UseGuards(JwtAuthGuard, RolesGuard) sur les contrôleurs.
+
+### Pipeline de Scraping (Asynchrone)
+- Import : Admin upload CSV → API stocke en BDD (Status: PENDING).
+- Queue : API ajoute un Job dans Redis via BullMQ.
+- Processing : Worker (NestJS) récupère le Job, lance Puppeteer, scrape LinkedIn.
+- Update : Worker met à jour MySQL via Sequelize (Status: COMPLETED).
