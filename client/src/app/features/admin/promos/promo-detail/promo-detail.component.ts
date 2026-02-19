@@ -65,41 +65,96 @@ export interface ImportSummary {
       }
 
       <div class="bg-white shadow overflow-hidden sm:rounded-lg border border-gray-200">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prénom</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Diplôme</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            @for (alumnus of alumni(); track alumnus.id) {
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
               <tr>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ alumnus.last_name }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ alumnus.first_name }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ alumnus.user?.email }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ alumnus.diploma }}</td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span
-                    [ngClass]="alumnus.user?.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'"
-                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                  >
-                    {{ alumnus.user?.is_active ? 'Actif' : 'En attente' }}
-                  </span>
-                </td>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Nom / Prénom
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LinkedIn</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Diplôme</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Poste / Entreprise
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Enrichi</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
               </tr>
-            } @empty {
-              <tr>
-                <td colspan="5" class="px-6 py-12 text-center text-gray-500 italic">
-                  Pas d'étudiants ajoutés pour cette promotion.
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              @for (alumnus of alumni(); track alumnus.id) {
+                <tr class="hover:bg-gray-50 transition-colors">
+                  <td class="px-6 py-4 whitespace-nowrap text-sm">
+                    <div class="font-bold text-gray-900">{{ alumnus.last_name | uppercase }}</div>
+                    <div class="text-gray-500">{{ alumnus.first_name }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ alumnus.user?.email }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    @if (alumnus.linkedin_url) {
+                      <a
+                        [href]="alumnus.linkedin_url"
+                        target="_blank"
+                        class="text-indigo-600 hover:text-indigo-900 flex items-center"
+                      >
+                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                          <path
+                            d="M19 0h-14c-2.761 0-4 1.239-4 4v14c0 2.761 1.239 4 4 4h14c2.761 0 4-1.239 4-4v-14c0-2.761-1.239-4-4-4zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"
+                          />
+                        </svg>
+                      </a>
+                    } @else {
+                      <span class="text-gray-300 italic text-xs">Non renseigné</span>
+                    }
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ alumnus.diploma }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm">
+                    @if (alumnus.current_position || alumnus.company) {
+                      <div class="text-gray-900 font-medium">{{ alumnus.current_position || '-' }}</div>
+                      <div class="text-xs text-gray-500">{{ alumnus.company || '-' }}</div>
+                    } @else {
+                      <span class="text-gray-300 italic text-xs">En attente de scraping</span>
+                    }
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                    @if (alumnus.data_enriched) {
+                      <span class="text-green-500" title="Données enrichies">
+                        <svg class="h-5 w-5 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </span>
+                    } @else {
+                      <span class="text-yellow-500 animate-pulse" title="Scraping en cours ou à venir">
+                        <svg class="h-5 w-5 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                      </span>
+                    }
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span
+                      [ngClass]="alumnus.user?.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'"
+                      class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                    >
+                      {{ alumnus.user?.is_active ? 'Actif' : 'En attente' }}
+                    </span>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="7" class="px-6 py-12 text-center text-gray-500 italic">
+                    Pas d'étudiants ajoutés pour cette promotion.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 

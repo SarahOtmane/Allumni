@@ -12,6 +12,11 @@ export interface Alumni {
   last_name: string;
   diploma: string;
   promo_year: number;
+  linkedin_url?: string;
+  current_position?: string;
+  company?: string;
+  status: string;
+  data_enriched: boolean;
   user: {
     email: string;
     is_active: boolean;
