@@ -76,6 +76,7 @@
 - [x] PRP Créé : `PRPs/admin-staff-management-invitation-light.md`
 - [x] Dashboard Analytics (KPIs, Cards)
 - [x] Gestion des Offres d'Emploi (Création, Liste, Modification, Suppression)
+- [x] Gestion des Événements (Création, Liste, Modification, Suppression)
 - [ ] Gestion Alumni CRUD (liste, détail, édition)
 - [ ] Import CSV (upload + validation)
 

@@ -78,6 +78,22 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
           </svg>
           Offres d'Emploi
         </a>
+
+        <a
+          routerLink="/admin/events"
+          routerLinkActive="bg-slate-800 text-indigo-400 border-l-4 border-indigo-400"
+          class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-800 transition-all group"
+        >
+          <svg class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+          Événements
+        </a>
       </nav>
 
       <div class="p-4 border-t border-slate-800">

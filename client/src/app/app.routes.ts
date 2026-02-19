@@ -55,6 +55,21 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/admin/jobs/job-create/job-create.component').then((m) => m.JobCreateComponent),
       },
+      {
+        path: 'events',
+        loadComponent: () =>
+          import('./features/admin/events/event-list/event-list.component').then((m) => m.EventListComponent),
+      },
+      {
+        path: 'events/new',
+        loadComponent: () =>
+          import('./features/admin/events/event-create/event-create.component').then((m) => m.EventCreateComponent),
+      },
+      {
+        path: 'events/edit/:id',
+        loadComponent: () =>
+          import('./features/admin/events/event-create/event-create.component').then((m) => m.EventCreateComponent),
+      },
     ],
   },
 
