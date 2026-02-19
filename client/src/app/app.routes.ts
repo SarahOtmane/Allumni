@@ -24,6 +24,16 @@ export const routes: Routes = [
         path: '',
         loadComponent: () => import('./features/admin/dashboard/dashboard.component').then((m) => m.DashboardComponent),
       },
+      {
+        path: 'promos',
+        loadComponent: () =>
+          import('./features/admin/promos/promo-list/promo-list.component').then((m) => m.PromoListComponent),
+      },
+      {
+        path: 'promos/:year',
+        loadComponent: () =>
+          import('./features/admin/promos/promo-detail/promo-detail.component').then((m) => m.PromoDetailComponent),
+      },
     ],
   },
 
