@@ -1,7 +1,6 @@
----
-description: Explorer le codebase, créer un plan d'implémentation, coder et tester selon le workflow EPCT
----
+description = "Explorer le codebase, créer un plan d'implémentation, coder et tester selon le workflow EPCT."
 
+prompt = """
 # Explore, Plan, Code, Test Workflow
 
 À la fin de ce message, je vais te demander de faire quelque chose.
@@ -108,3 +107,4 @@ Quand le travail est satisfaisant, rédiger un court rapport utilisable comme de
 ```
 
 Mettre à jour `docs/TASKS.md` pour marquer la tâche comme ✅ Terminée.
+"""
