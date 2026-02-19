@@ -23,19 +23,34 @@ export class JobOffer extends Model {
   @Column({ type: DataType.TEXT, allowNull: false })
   description: string;
 
+  @Column({ type: DataType.TEXT, allowNull: true })
+  company_description: string;
+
+  @Column({ type: DataType.TEXT, allowNull: true })
+  profile_description: string;
+
+  @Column({ type: DataType.TEXT, allowNull: true })
+  missions: string;
+
   @Column({ type: DataType.STRING, allowNull: false })
   company: string;
 
-  @Column({ type: DataType.STRING, allowNull: false })
+  @Column({ type: DataType.STRING, allowNull: true })
   location: string;
 
   @Column({
-    type: DataType.ENUM('FULL_TIME', 'PART_TIME', 'INTERNSHIP', 'FREELANCE'),
+    type: DataType.ENUM('CDI', 'CDD', 'PRESTATAIRE'),
     allowNull: false,
   })
   type: string;
 
-  @Column({ type: DataType.STRING })
+  @Column({ type: DataType.DATE, allowNull: true })
+  start_date: Date;
+
+  @Column({ type: DataType.STRING, allowNull: true })
+  link: string;
+
+  @Column({ type: DataType.STRING, allowNull: true })
   salary_range: string;
 
   @Column({
