@@ -57,8 +57,9 @@ alumni-platform/
 ## Sécurité & Pipeline
 
 ### Authentification
-- JWT (JSON Web Tokens) : Utilisé pour sécuriser toutes les requêtes API.
-- Guards NestJS : @UseGuards(JwtAuthGuard, RolesGuard) sur les contrôleurs.
+- **Invitation-Only :** Pas d'endpoint de création de compte public.
+- **Activation Flow :** Token sécurisé généré lors de la création manuelle ou de l'import. Le token expire après 48h.
+- **JWT (JSON Web Tokens) :** Utilisé pour sécuriser toutes les requêtes API une fois le compte activé.
 
 ### Pipeline de Scraping (Asynchrone)
 - Import : Admin upload CSV → API stocke en BDD (Status: PENDING).

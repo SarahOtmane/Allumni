@@ -234,7 +234,8 @@ NODE_ENV=development
 type UserRole = 'ADMIN' | 'STAFF' | 'ALUMNI'
 ```
 
-- **ADMIN** : CRUD complet, Import CSV, Gestion contenus, Dashboard analytics
+- **Accès par Invitation Uniquement** : Pas d'inscription publique.
+- **ADMIN** : CRUD complet, Invitations, Import CSV, Gestion contenus, Dashboard analytics
 - **STAFF** : Lecture seule (profils alumni, statistiques)
 - **ALUMNI** : Annuaire (vue restreinte), Jobs, Events, Messagerie
 

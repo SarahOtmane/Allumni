@@ -33,9 +33,11 @@ Ce PRP définit la structure que devront suivre les fichiers suivants lors de le
 #### Entity: `User`
 - `id`: UUID (Primary Key)
 - `email`: STRING (Unique, Indexed)
-- `password_hash`: STRING
+- `password_hash`: STRING (Nullable)
 - `role`: ENUM('ADMIN', 'STAFF', 'ALUMNI')
-- `is_active`: BOOLEAN (Default: true)
+- `is_active`: BOOLEAN (Default: false)
+- `activation_token`: STRING (Optional)
+- `token_expires_at`: TIMESTAMP (Optional)
 - `created_at`: TIMESTAMP
 - `updated_at`: TIMESTAMP
 
@@ -105,9 +107,10 @@ Ce PRP définit la structure que devront suivre les fichiers suivants lors de le
 | Module | Method | Route | Description | Roles |
 |:-------|:-------|:------|:------------|:------|
 | **Auth** | POST | `/auth/login` | Connexion JWT | Public |
-| | POST | `/auth/register` | Inscription Alumni | Public |
+| | POST | `/auth/activate` | Activer compte (Set Password) | Public (Token) |
 | | GET | `/auth/me` | Profil connecté | All |
-| **Users** | GET | `/users` | Liste utilisateurs | ADMIN |
+| **Users** | POST | `/users/invite` | Inviter Admin/Staff | ADMIN |
+| | GET | `/users` | Liste utilisateurs | ADMIN |
 | | PATCH | `/users/:id` | Modifier rôle/status | ADMIN |
 | **Alumni**| GET | `/alumni` | Liste complète profils | ADMIN, STAFF |
 | | GET | `/alumni/directory`| Annuaire restreint | ALUMNI |
