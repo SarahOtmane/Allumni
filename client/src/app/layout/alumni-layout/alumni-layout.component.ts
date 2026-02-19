@@ -53,11 +53,11 @@ import { AuthService } from '../../core/services/auth.service';
         <app-header 
           [user]="authService.currentUser()" 
           (logout)="onLogout()" 
-        />
+        ></app-header>
 
         <!-- Main Content -->
         <main class="flex-1 overflow-y-auto bg-gray-50">
-          <router-outlet />
+          <router-outlet></router-outlet>
         </main>
       </div>
     </div>
