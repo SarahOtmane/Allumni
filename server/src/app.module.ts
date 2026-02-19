@@ -9,6 +9,7 @@ import { AlumniModule } from './modules/alumni/alumni.module';
 import { JobsModule } from './modules/jobs/jobs.module';
 import { EventsModule } from './modules/events/events.module';
 import { ChatModule } from './modules/chat/chat.module';
+import { MailModule } from './modules/mail/mail.module';
 import { getDatabaseConfig } from './config/database.config';
 
 @Module({
@@ -28,6 +29,7 @@ import { getDatabaseConfig } from './config/database.config';
     JobsModule,
     EventsModule,
     ChatModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [AppService],
