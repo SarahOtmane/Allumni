@@ -8,12 +8,15 @@ import {
   UseInterceptors,
   UploadedFile,
   ParseIntPipe,
+  Patch,
+  Delete,
 } from '@nestjs/common';
 import { AlumniService } from '../services/alumni.service';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { UpdateAlumniDto } from '../dto/update-alumni.dto';
 
 @Controller('alumni')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -36,6 +39,18 @@ export class AlumniController {
   @Roles('ADMIN', 'STAFF')
   findByYear(@Param('year', ParseIntPipe) year: number) {
     return this.alumniService.findByYear(year);
+  }
+
+  @Patch(':id')
+  @Roles('ADMIN')
+  update(@Param('id') id: string, @Body() updateDto: UpdateAlumniDto) {
+    return this.alumniService.update(id, updateDto);
+  }
+
+  @Delete(':id')
+  @Roles('ADMIN')
+  remove(@Param('id') id: string) {
+    return this.alumniService.remove(id);
   }
 
   @Post('import/:year')

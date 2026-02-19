@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AlumniService, Alumni } from '../../../../core/services/alumni.service';
 import { CsvInstructionsModalComponent } from '../../../../shared/components/csv-instructions-modal/csv-instructions-modal.component';
+import { AlumniEditModalComponent } from '../alumni-edit-modal/alumni-edit-modal.component';
 
 export interface ImportSummary {
   success: number;
@@ -12,7 +13,7 @@ export interface ImportSummary {
 
 @Component({
   standalone: true,
-  imports: [CommonModule, RouterLink, CsvInstructionsModalComponent],
+  imports: [CommonModule, RouterLink, CsvInstructionsModalComponent, AlumniEditModalComponent],
   template: `
     <div class="p-6">
       <header class="mb-8 flex justify-between items-center">
@@ -80,6 +81,7 @@ export interface ImportSummary {
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Enrichi</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -144,10 +146,40 @@ export interface ImportSummary {
                       {{ alumnus.user?.is_active ? 'Actif' : 'En attente' }}
                     </span>
                   </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button
+                      (click)="onEditAlumnus(alumnus)"
+                      class="text-indigo-600 hover:text-indigo-900 mr-3"
+                      title="Modifier"
+                    >
+                      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      (click)="onDeleteAlumnus(alumnus.id)"
+                      class="text-red-600 hover:text-red-900"
+                      title="Supprimer"
+                    >
+                      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h14"
+                        />
+                      </svg>
+                    </button>
+                  </td>
                 </tr>
               } @empty {
                 <tr>
-                  <td colspan="7" class="px-6 py-12 text-center text-gray-500 italic">
+                  <td colspan="8" class="px-6 py-12 text-center text-gray-500 italic">
                     Pas d'étudiants ajoutés pour cette promotion.
                   </td>
                 </tr>
@@ -161,6 +193,14 @@ export interface ImportSummary {
     @if (showImportModal()) {
       <app-csv-instructions-modal (modalClosed)="showImportModal.set(false)" (fileUploaded)="onFileUploaded($event)" />
     }
+
+    @if (selectedAlumnus()) {
+      <app-alumni-edit-modal
+        [alumnus]="selectedAlumnus()!"
+        (closed)="selectedAlumnus.set(null)"
+        (saved)="onAlumnusSaved()"
+      />
+    }
   `,
 })
 export class PromoDetailComponent implements OnInit {
@@ -171,6 +211,7 @@ export class PromoDetailComponent implements OnInit {
   alumni = signal<Alumni[]>([]);
   showImportModal = signal(false);
   importSummary = signal<ImportSummary | null>(null);
+  selectedAlumnus = signal<Alumni | null>(null);
 
   ngOnInit() {
     this.route.params.subscribe((params) => {
@@ -192,5 +233,23 @@ export class PromoDetailComponent implements OnInit {
       },
       error: () => alert("Erreur lors de l'import"),
     });
+  }
+
+  onEditAlumnus(alumnus: Alumni) {
+    this.selectedAlumnus.set(alumnus);
+  }
+
+  onAlumnusSaved() {
+    this.selectedAlumnus.set(null);
+    this.loadAlumni();
+  }
+
+  onDeleteAlumnus(id: string) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cet étudiant ? Cette action est irréversible.')) {
+      this.alumniService.deleteAlumni(id).subscribe({
+        next: () => this.loadAlumni(),
+        error: (err) => alert(err.error?.message || 'Erreur lors de la suppression'),
+      });
+    }
   }
 }

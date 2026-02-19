@@ -42,6 +42,14 @@ export class AlumniService {
     return this.http.get<Alumni[]>(`${this.apiUrl}/promos/${year}`);
   }
 
+  updateAlumni(id: string, alumni: Partial<Alumni> & { email?: string }) {
+    return this.http.patch<Alumni>(`${this.apiUrl}/${id}`, alumni);
+  }
+
+  deleteAlumni(id: string) {
+    return this.http.delete(`${this.apiUrl}/${id}`);
+  }
+
   importCsv(year: number, file: File) {
     const formData = new FormData();
     formData.append('file', file);
