@@ -1,10 +1,12 @@
 import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import { JwtService } from '@nestjs/jwt';
 import { User } from '../users/models/user.model';
 import { v4 as uuidv4 } from 'uuid';
 import * as argon2 from 'argon2';
 import { MailService } from '../mail/mail.service';
 import { ActivateAccountDto } from './dto/activate-account.dto';
+import { LoginDto } from './dto/login.dto';
 import { Op } from 'sequelize';
 
 @Injectable()
@@ -13,7 +15,39 @@ export class AuthService {
     @InjectModel(User)
     private userModel: typeof User,
     private mailService: MailService,
+    private jwtService: JwtService,
   ) {}
+
+  async validateUser(loginDto: LoginDto): Promise<User> {
+    const user = await this.userModel.findOne({
+      where: { email: loginDto.email },
+    });
+
+    if (!user || !user.is_active || !user.password_hash) {
+      throw new UnauthorizedException('Identifiants invalides ou compte non activé');
+    }
+
+    const isPasswordValid = await argon2.verify(user.password_hash, loginDto.password);
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Identifiants invalides');
+    }
+
+    return user;
+  }
+
+  async login(user: User) {
+    const payload = { sub: user.id, email: user.email, role: user.role };
+
+    return {
+      access_token: this.jwtService.sign(payload),
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+      },
+    };
+  }
 
   async inviteUser(email: string, role: string) {
     const token = uuidv4();

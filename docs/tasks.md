@@ -54,7 +54,8 @@
 - [x] Configuration Sequelize & Migrations initiales
 - [x] Implémentation de tous les modèles Sequelize
 - [x] Mise en place du RBAC (Roles Decorator & Guard)
-- [ ] Module `auth` (JWT Strategy, Guards, Login/Register)
+- [x] Activation de compte par invitation (Mail + Token)
+- [x] Module `auth` complet (JWT Strategy, Guards, Login)
 - [ ] Module `auth` (JWT Strategy, Guards, Login/Register)
 - [ ] Module `users` (Entity, Service, Controller)
 - [ ] Migration Sequelize : table `users`
