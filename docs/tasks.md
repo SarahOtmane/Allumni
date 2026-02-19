@@ -72,6 +72,7 @@
 - [ ] Interceptor HTTP (authInterceptor — attacher le token JWT)
 
 ### Phase 4 — Features Backoffice Admin
+- [x] PRP Créé : `PRPs/admin-dashboard.md`
 - [ ] Dashboard Analytics (KPIs, Charts)
 - [ ] Gestion Alumni CRUD (liste, détail, édition)
 - [ ] Import CSV (upload + validation)

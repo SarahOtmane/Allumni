@@ -22,10 +22,11 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        loadComponent: () => import('./app.component').then((m) => m.AppComponent), // Placeholder
+        loadComponent: () => import('./features/admin/dashboard/dashboard.component').then((m) => m.DashboardComponent),
       },
     ],
   },
+
   {
     path: 'portal',
     canActivate: [authGuard, roleGuard],
