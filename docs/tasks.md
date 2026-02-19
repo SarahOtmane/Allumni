@@ -89,9 +89,10 @@
 - [ ] Gestion des erreurs et retry
 
 ### Phase 6 — Portail Alumni
+- [x] PRP Créé : `PRPs/alumni-portal-jobs-events.md`
 - [ ] Annuaire (vue restreinte)
-- [ ] Job Board (liste + candidature)
-- [ ] Events Board (liste + inscription)
+- [ ] Job Board (liste + détails + filtres)
+- [ ] Events Board (liste + inscription + détails)
 - [ ] Messagerie interne (conversations + messages)
 
 ---
