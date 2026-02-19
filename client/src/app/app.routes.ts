@@ -94,6 +94,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/alumni/events/event-list/event-list.component').then((m) => m.AlumniEventListComponent),
       },
+      {
+        path: 'directory',
+        loadComponent: () =>
+          import('./features/alumni/directory/directory.component').then((m) => m.AlumniDirectoryComponent),
+      },
     ],
   },
   {
