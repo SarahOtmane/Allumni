@@ -73,6 +73,7 @@
 
 ### Phase 4 — Features Backoffice Admin
 - [x] PRP Créé : `PRPs/admin-dashboard.md`
+- [x] PRP Créé : `PRPs/admin-staff-management-invitation-light.md`
 - [ ] Dashboard Analytics (KPIs, Charts)
 - [ ] Gestion Alumni CRUD (liste, détail, édition)
 - [ ] Import CSV (upload + validation)

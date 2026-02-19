@@ -35,6 +35,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/admin/promos/promo-detail/promo-detail.component').then((m) => m.PromoDetailComponent),
       },
+      {
+        path: 'staff',
+        loadComponent: () =>
+          import('./features/admin/staff/staff-list/staff-list.component').then((m) => m.StaffListComponent),
+      },
     ],
   },
 
