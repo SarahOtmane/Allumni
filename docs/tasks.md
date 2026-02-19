@@ -49,6 +49,7 @@
 - [x] PRP Créé : `PRPs/infra-dev-environment-setup.md`
 
 ### Phase 2 — Backend Foundation
+- [x] PRP Créé : `PRPs/backend-foundation-models-routes.md` (Définition Modèles & Routes)
 - [ ] Initialisation NestJS avec modules de base
 - [ ] Module `auth` (JWT Strategy, Guards, Login/Register)
 - [ ] Module `users` (Entity, Service, Controller)
