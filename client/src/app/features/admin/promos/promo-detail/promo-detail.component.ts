@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AlumniService, Alumni } from '../../../../core/services/alumni.service';
 import { CsvInstructionsModalComponent } from '../../../../shared/components/csv-instructions-modal/csv-instructions-modal.component';
 import { AlumniEditModalComponent } from '../alumni-edit-modal/alumni-edit-modal.component';
+import { ConfirmModalComponent } from '../../../../shared/components/confirm-modal/confirm-modal.component';
 
 export interface ImportSummary {
   success: number;
@@ -13,7 +14,7 @@ export interface ImportSummary {
 
 @Component({
   standalone: true,
-  imports: [CommonModule, RouterLink, CsvInstructionsModalComponent, AlumniEditModalComponent],
+  imports: [CommonModule, RouterLink, CsvInstructionsModalComponent, AlumniEditModalComponent, ConfirmModalComponent],
   template: `
     <div class="p-6">
       <header class="mb-8 flex justify-between items-center">
@@ -162,7 +163,7 @@ export interface ImportSummary {
                       </svg>
                     </button>
                     <button
-                      (click)="onDeleteAlumnus(alumnus.id)"
+                      (click)="onDeleteClick(alumnus.id)"
                       class="text-red-600 hover:text-red-900"
                       title="Supprimer"
                     >
@@ -201,6 +202,16 @@ export interface ImportSummary {
         (saved)="onAlumnusSaved()"
       />
     }
+
+    @if (alumnusIdToDelete()) {
+      <app-confirm-modal
+        title="Supprimer l'étudiant"
+        message="Êtes-vous sûr de vouloir supprimer cet étudiant ? Cette action est irréversible et supprimera également son compte utilisateur."
+        confirmText="Supprimer"
+        (confirmed)="handleDelete()"
+        (cancelled)="alumnusIdToDelete.set(null)"
+      />
+    }
   `,
 })
 export class PromoDetailComponent implements OnInit {
@@ -212,6 +223,7 @@ export class PromoDetailComponent implements OnInit {
   showImportModal = signal(false);
   importSummary = signal<ImportSummary | null>(null);
   selectedAlumnus = signal<Alumni | null>(null);
+  alumnusIdToDelete = signal<string | null>(null);
 
   ngOnInit() {
     this.route.params.subscribe((params) => {
@@ -244,12 +256,22 @@ export class PromoDetailComponent implements OnInit {
     this.loadAlumni();
   }
 
-  onDeleteAlumnus(id: string) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cet étudiant ? Cette action est irréversible.')) {
-      this.alumniService.deleteAlumni(id).subscribe({
-        next: () => this.loadAlumni(),
-        error: (err) => alert(err.error?.message || 'Erreur lors de la suppression'),
-      });
-    }
+  onDeleteClick(id: string) {
+    this.alumnusIdToDelete.set(id);
+  }
+
+  handleDelete() {
+    if (!this.alumnusIdToDelete()) return;
+
+    this.alumniService.deleteAlumni(this.alumnusIdToDelete()!).subscribe({
+      next: () => {
+        this.alumnusIdToDelete.set(null);
+        this.loadAlumni();
+      },
+      error: (err) => {
+        this.alumnusIdToDelete.set(null);
+        alert(err.error?.message || 'Erreur lors de la suppression');
+      },
+    });
   }
 }

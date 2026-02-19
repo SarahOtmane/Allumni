@@ -2,10 +2,11 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { EventsService, AlumniEvent } from '../../../../core/services/events.service';
+import { ConfirmModalComponent } from '../../../../shared/components/confirm-modal/confirm-modal.component';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, ConfirmModalComponent],
   template: `
     <div class="p-6">
       <header class="mb-8 flex justify-between items-center">
@@ -47,7 +48,7 @@ import { EventsService, AlumniEvent } from '../../../../core/services/events.ser
                   <a [routerLink]="['/admin/events/edit', event.id]" class="text-indigo-600 hover:text-indigo-900 mr-4">
                     Modifier
                   </a>
-                  <button (click)="deleteEvent(event.id)" class="text-red-600 hover:text-red-900">Supprimer</button>
+                  <button (click)="onDeleteClick(event.id)" class="text-red-600 hover:text-red-900">Supprimer</button>
                 </td>
               </tr>
             } @empty {
@@ -61,12 +62,23 @@ import { EventsService, AlumniEvent } from '../../../../core/services/events.ser
         </table>
       </div>
     </div>
+
+    @if (eventIdToDelete()) {
+      <app-confirm-modal
+        title="Supprimer l'événement"
+        message="Êtes-vous sûr de vouloir supprimer cet événement ? Cette action est irréversible."
+        confirmText="Supprimer"
+        (confirmed)="handleDelete()"
+        (cancelled)="eventIdToDelete.set(null)"
+      />
+    }
   `,
 })
 export class EventListComponent implements OnInit {
   private eventsService = inject(EventsService);
 
   events = signal<AlumniEvent[]>([]);
+  eventIdToDelete = signal<string | null>(null);
 
   ngOnInit() {
     this.loadEvents();
@@ -76,9 +88,16 @@ export class EventListComponent implements OnInit {
     this.eventsService.getEvents().subscribe((data) => this.events.set(data));
   }
 
-  deleteEvent(id: string) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cet événement ?')) {
-      this.eventsService.deleteEvent(id).subscribe(() => this.loadEvents());
-    }
+  onDeleteClick(id: string) {
+    this.eventIdToDelete.set(id);
+  }
+
+  handleDelete() {
+    if (!this.eventIdToDelete()) return;
+
+    this.eventsService.deleteEvent(this.eventIdToDelete()!).subscribe(() => {
+      this.eventIdToDelete.set(null);
+      this.loadEvents();
+    });
   }
 }

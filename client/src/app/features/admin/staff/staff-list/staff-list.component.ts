@@ -3,10 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UsersService } from '../../services/users.service';
 import { User } from '../../../../core/services/auth.service';
+import { ConfirmModalComponent } from '../../../../shared/components/confirm-modal/confirm-modal.component';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, ConfirmModalComponent],
   template: `
     <div class="p-6">
       <header class="mb-8">
@@ -61,56 +62,55 @@ import { User } from '../../../../core/services/auth.service';
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
                 Statut
               </th>
-                            <th
-                              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-right"
-                            >
-                              Date d'invitation
-                            </th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Actions
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                          @for (member of team(); track member.id) {
-                            <tr class="hover:bg-gray-50 transition-colors">
-                              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                {{ member.email }}
-                              </td>
-                              <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <span [ngClass]="member.role === 'ADMIN' ? 'text-indigo-600 font-bold' : 'text-gray-600'">
-                                  {{ member.role }}
-                                </span>
-                              </td>
-                              <td class="px-6 py-4 whitespace-nowrap text-center">
-                                <span
-                                  [ngClass]="member.is_active ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'"
-                                  class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
-                                >
-                                  {{ member.is_active ? 'Actif' : 'En attente' }}
-                                </span>
-                              </td>
-                              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
-                                {{ member.created_at | date: 'dd/MM/yyyy' }}
-                              </td>
-                              <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium">
-                                @if (member.role === 'STAFF') {
-                                  <button 
-                                    (click)="onDelete(member.id!)" 
-                                    class="text-red-600 hover:text-red-900"
-                                    title="Supprimer le membre"
-                                  >
-                                    Supprimer
-                                  </button>
-                                } @else {
-                                  <span class="text-gray-300 italic text-xs" title="Les administrateurs ne peuvent pas être supprimés via cette interface">Protégé</span>
-                                }
-                              </td>
-                            </tr>
-              
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-right">
+                Date d'invitation
+              </th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            @for (member of team(); track member.id) {
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  {{ member.email }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <span [ngClass]="member.role === 'ADMIN' ? 'text-indigo-600 font-bold' : 'text-gray-600'">
+                    {{ member.role }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center">
+                  <span
+                    [ngClass]="member.is_active ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'"
+                    class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
+                  >
+                    {{ member.is_active ? 'Actif' : 'En attente' }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                  {{ member.created_at | date: 'dd/MM/yyyy' }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium">
+                  @if (member.role === 'STAFF') {
+                    <button
+                      (click)="onDeleteClick(member.id!)"
+                      class="text-red-600 hover:text-red-900"
+                      title="Supprimer le membre"
+                    >
+                      Supprimer
+                    </button>
+                  } @else {
+                    <span
+                      class="text-gray-300 italic text-xs"
+                      title="Les administrateurs ne peuvent pas être supprimés via cette interface"
+                      >Protégé</span
+                    >
+                  }
+                </td>
+              </tr>
             } @empty {
               <tr>
-                <td colspan="4" class="px-6 py-12 text-center text-gray-500 italic">
+                <td colspan="5" class="px-6 py-12 text-center text-gray-500 italic">
                   Aucun membre trouvé dans l'équipe.
                 </td>
               </tr>
@@ -119,6 +119,16 @@ import { User } from '../../../../core/services/auth.service';
         </table>
       </div>
     </div>
+
+    @if (staffIdToDelete()) {
+      <app-confirm-modal
+        title="Supprimer le membre"
+        message="Êtes-vous sûr de vouloir supprimer ce membre de l'équipe ? Cette action est irréversible."
+        confirmText="Supprimer"
+        (confirmed)="handleDelete()"
+        (cancelled)="staffIdToDelete.set(null)"
+      />
+    }
   `,
 })
 export class StaffListComponent implements OnInit {
@@ -128,6 +138,7 @@ export class StaffListComponent implements OnInit {
   isSubmitting = signal(false);
   errorMsg = signal<string | null>(null);
   successMsg = signal<string | null>(null);
+  staffIdToDelete = signal<string | null>(null);
 
   inviteForm = new FormGroup({
     email: new FormControl('', {
@@ -171,16 +182,22 @@ export class StaffListComponent implements OnInit {
     });
   }
 
-  onDelete(id: string) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce membre de l\'équipe ? Cette action est irréversible.')) {
-      this.userService.deleteUser(id).subscribe({
-        next: () => {
-          this.loadTeam();
-        },
-        error: (err) => {
-          alert(err.error?.message || 'Erreur lors de la suppression.');
-        }
-      });
-    }
+  onDeleteClick(id: string) {
+    this.staffIdToDelete.set(id);
+  }
+
+  handleDelete() {
+    if (!this.staffIdToDelete()) return;
+
+    this.userService.deleteUser(this.staffIdToDelete()!).subscribe({
+      next: () => {
+        this.staffIdToDelete.set(null);
+        this.loadTeam();
+      },
+      error: (err) => {
+        this.staffIdToDelete.set(null);
+        alert(err.error?.message || 'Erreur lors de la suppression.');
+      },
+    });
   }
 }

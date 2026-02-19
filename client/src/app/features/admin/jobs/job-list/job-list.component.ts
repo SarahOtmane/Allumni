@@ -2,10 +2,11 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { JobsService, JobOffer } from '../../../../core/services/jobs.service';
+import { ConfirmModalComponent } from '../../../../shared/components/confirm-modal/confirm-modal.component';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, ConfirmModalComponent],
   template: `
     <div class="p-6">
       <header class="mb-8 flex justify-between items-center">
@@ -55,7 +56,7 @@ import { JobsService, JobOffer } from '../../../../core/services/jobs.service';
                   <a [routerLink]="['/admin/jobs/edit', job.id]" class="text-indigo-600 hover:text-indigo-900 mr-4"
                     >Modifier</a
                   >
-                  <button (click)="deleteJob(job.id)" class="text-red-600 hover:text-red-900">Supprimer</button>
+                  <button (click)="onDeleteClick(job.id)" class="text-red-600 hover:text-red-900">Supprimer</button>
                 </td>
               </tr>
             } @empty {
@@ -69,12 +70,23 @@ import { JobsService, JobOffer } from '../../../../core/services/jobs.service';
         </table>
       </div>
     </div>
+
+    @if (jobIdToDelete()) {
+      <app-confirm-modal
+        title="Supprimer l'offre"
+        message="Êtes-vous sûr de vouloir supprimer cette offre d'emploi ?"
+        confirmText="Supprimer"
+        (confirmed)="handleDelete()"
+        (cancelled)="jobIdToDelete.set(null)"
+      />
+    }
   `,
 })
 export class JobListComponent implements OnInit {
   private jobsService = inject(JobsService);
 
   jobs = signal<JobOffer[]>([]);
+  jobIdToDelete = signal<string | null>(null);
 
   ngOnInit() {
     this.loadJobs();
@@ -84,9 +96,16 @@ export class JobListComponent implements OnInit {
     this.jobsService.getJobs().subscribe((data) => this.jobs.set(data));
   }
 
-  deleteJob(id: string) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette offre ?')) {
-      this.jobsService.deleteJob(id).subscribe(() => this.loadJobs());
-    }
+  onDeleteClick(id: string) {
+    this.jobIdToDelete.set(id);
+  }
+
+  handleDelete() {
+    if (!this.jobIdToDelete()) return;
+
+    this.jobsService.deleteJob(this.jobIdToDelete()!).subscribe(() => {
+      this.jobIdToDelete.set(null);
+      this.loadJobs();
+    });
   }
 }
