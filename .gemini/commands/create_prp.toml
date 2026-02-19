@@ -37,7 +37,7 @@ Avant de créer le PRP, effectue une recherche approfondie :
 - Vérifier la compatibilité avec les versions utilisées (Angular 17, NestJS 10, Sequelize 6)
 
 ### 4. Template Reference
-- Utiliser `concept_library/cc_PRP_flow/PRPs/base_template_v1.md` comme guide structurel
+- Utiliser `concept_library/cc_PRP_flow/PRPs/base_template.md` comme guide structurel
 
 ## PRP Output Structure
 
