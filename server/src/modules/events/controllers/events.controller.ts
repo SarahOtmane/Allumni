@@ -22,14 +22,26 @@ export class EventsController {
 
   @Get()
   @Roles('ADMIN', 'STAFF', 'ALUMNI')
-  findAll() {
-    return this.eventsService.findAll();
+  findAll(@Request() req) {
+    return this.eventsService.findAll(req.user.id);
   }
 
   @Get(':id')
   @Roles('ADMIN', 'STAFF', 'ALUMNI')
   findOne(@Param('id') id: string) {
     return this.eventsService.findOne(id);
+  }
+
+  @Post(':id/register')
+  @Roles('ALUMNI')
+  register(@Param('id') id: string, @Request() req) {
+    return this.eventsService.register(id, req.user.id);
+  }
+
+  @Delete(':id/unregister')
+  @Roles('ALUMNI')
+  unregister(@Param('id') id: string, @Request() req) {
+    return this.eventsService.unregister(id, req.user.id);
   }
 
   @Patch(':id')

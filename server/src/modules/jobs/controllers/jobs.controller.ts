@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards, Request, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, UseGuards, Request, Patch, Query } from '@nestjs/common';
 import { JobsService } from '../services/jobs.service';
 import { CreateJobDto } from '../dto/create-job.dto';
 import { UpdateJobDto } from '../dto/update-job.dto';
@@ -19,8 +19,8 @@ export class JobsController {
 
   @Get()
   @Roles('ADMIN', 'STAFF', 'ALUMNI')
-  findAll() {
-    return this.jobsService.findAll();
+  findAll(@Query('title') title?: string, @Query('location') location?: string, @Query('sort') sort?: 'ASC' | 'DESC') {
+    return this.jobsService.findAll({ title, location, sort });
   }
 
   @Get(':id')

@@ -4,6 +4,7 @@ import { JobOffer } from '../models/job-offer.model';
 import { CreateJobDto } from '../dto/create-job.dto';
 import { UpdateJobDto } from '../dto/update-job.dto';
 import { User } from '../../users/models/user.model';
+import { Op } from 'sequelize';
 
 @Injectable()
 export class JobsService {
@@ -19,10 +20,21 @@ export class JobsService {
     });
   }
 
-  async findAll() {
+  async findAll(filters?: { title?: string; location?: string; sort?: 'ASC' | 'DESC' }) {
+    const where: any = {};
+
+    if (filters?.title) {
+      where.title = { [Op.like]: `%${filters.title}%` };
+    }
+
+    if (filters?.location) {
+      where.location = { [Op.like]: `%${filters.location}%` };
+    }
+
     return this.jobOfferModel.findAll({
+      where,
       include: [{ model: User, attributes: ['id', 'email'] }],
-      order: [['created_at', 'DESC']],
+      order: [['created_at', filters?.sort || 'DESC']],
     });
   }
 

@@ -10,6 +10,7 @@ export interface AlumniEvent {
   location: string;
   max_participants?: number;
   created_at: string;
+  isRegistered?: boolean; // Added for the alumni view
 }
 
 @Injectable({
@@ -21,6 +22,14 @@ export class EventsService {
 
   getEvents() {
     return this.http.get<AlumniEvent[]>(this.apiUrl);
+  }
+
+  register(id: string) {
+    return this.http.post(`${this.apiUrl}/${id}/register`, {});
+  }
+
+  unregister(id: string) {
+    return this.http.delete(`${this.apiUrl}/${id}/unregister`);
   }
 
   getEvent(id: string) {

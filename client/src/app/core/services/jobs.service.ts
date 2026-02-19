@@ -28,6 +28,15 @@ export class JobsService {
     return this.http.get<JobOffer[]>(this.apiUrl);
   }
 
+  getJobsWithFilters(filters: { title?: string; location?: string; sort?: 'ASC' | 'DESC' }) {
+    let params = {};
+    if (filters.title) params = { ...params, title: filters.title };
+    if (filters.location) params = { ...params, location: filters.location };
+    if (filters.sort) params = { ...params, sort: filters.sort };
+
+    return this.http.get<JobOffer[]>(this.apiUrl, { params });
+  }
+
   getJob(id: string) {
     return this.http.get<JobOffer>(`${this.apiUrl}/${id}`);
   }

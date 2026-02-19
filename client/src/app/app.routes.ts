@@ -73,19 +73,33 @@ export const routes: Routes = [
     ],
   },
 
-  {
-    path: 'portal',
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['ALUMNI'] },
-    children: [
-      {
-        path: '',
-        loadComponent: () => import('./app.component').then((m) => m.AppComponent), // Placeholder
-      },
-    ],
-  },
-  {
-    path: '',
+    {
+      path: 'portal',
+      canActivate: [authGuard, roleGuard],
+      data: { roles: ['ALUMNI'] },
+      loadComponent: () =>
+        import('./layout/alumni-layout/alumni-layout.component').then((m) => m.AlumniLayoutComponent),
+      children: [
+        {
+          path: '',
+          redirectTo: 'jobs',
+          pathMatch: 'full',
+        },
+        {
+          path: 'jobs',
+          loadComponent: () =>
+            import('./features/alumni/jobs/job-list/job-list.component').then((m) => m.AlumniJobListComponent),
+        },
+        {
+          path: 'events',
+          loadComponent: () =>
+            import('./features/alumni/events/event-list/event-list.component').then((m) => m.AlumniEventListComponent),
+        },
+      ],
+    },
+    {
+      path: '',
+  
     redirectTo: 'auth/login',
     pathMatch: 'full',
   },
