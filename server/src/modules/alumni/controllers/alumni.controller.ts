@@ -10,6 +10,8 @@ import {
   ParseIntPipe,
   Patch,
   Delete,
+  Request,
+  Query,
 } from '@nestjs/common';
 import { AlumniService } from '../services/alumni.service';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
@@ -24,7 +26,7 @@ export class AlumniController {
   constructor(private readonly alumniService: AlumniService) {}
 
   @Get('promos')
-  @Roles('ADMIN', 'STAFF')
+  @Roles('ADMIN', 'STAFF', 'ALUMNI')
   findAllPromos() {
     return this.alumniService.findAllPromos();
   }
@@ -36,9 +38,9 @@ export class AlumniController {
   }
 
   @Get('promos/:year')
-  @Roles('ADMIN', 'STAFF')
-  findByYear(@Param('year', ParseIntPipe) year: number) {
-    return this.alumniService.findByYear(year);
+  @Roles('ADMIN', 'STAFF', 'ALUMNI')
+  findByYear(@Param('year', ParseIntPipe) year: number, @Request() req, @Query('search') search?: string) {
+    return this.alumniService.findByYear(year, req.user.role, search);
   }
 
   @Patch(':id')

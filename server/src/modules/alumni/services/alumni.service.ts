@@ -7,6 +7,7 @@ import { Sequelize } from 'sequelize-typescript';
 import { UpdateAlumniDto } from '../dto/update-alumni.dto';
 import * as csv from 'csv-parser';
 import { Readable } from 'stream';
+import { Op } from 'sequelize';
 
 @Injectable()
 export class AlumniService {
@@ -28,10 +29,23 @@ export class AlumniService {
     return this.promotionModel.create({ year });
   }
 
-  async findByYear(year: number) {
+  async findByYear(year: number, userRole?: string, search?: string) {
+    const isAlumni = userRole === 'ALUMNI';
+
+    const where: any = { promo_year: year };
+
+    if (search) {
+      where[Op.or] = [
+        { first_name: { [Op.like]: `%${search}%` } },
+        { last_name: { [Op.like]: `%${search}%` } },
+        { current_position: { [Op.like]: `%${search}%` } },
+      ];
+    }
+
     return this.alumniProfileModel.findAll({
-      where: { promo_year: year },
-      include: [{ model: User, attributes: ['id', 'email', 'is_active'] }],
+      where,
+      attributes: isAlumni ? ['id', 'first_name', 'last_name', 'current_position', 'promo_year'] : undefined,
+      include: isAlumni ? [] : [{ model: User, attributes: ['id', 'email', 'is_active'] }],
       order: [['last_name', 'ASC']],
     });
   }
