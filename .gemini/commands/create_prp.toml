@@ -1,5 +1,6 @@
-# Create PRP (Product Requirement Prompt)
+description = "Créer un PRP (Product Requirement Prompt) complet pour une nouvelle feature de la plateforme Alumni."
 
+prompt = """
 Tu as pour mission de créer un PRP complet pour une nouvelle feature de la plateforme Alumni.
 
 ## What is a PRP?
@@ -124,3 +125,4 @@ et mettre à jour `docs/TASKS.md` pour marquer la tâche "PRP créé".
 **Input :** $ARGUMENTS
 
 Décris la feature que tu veux implémenter. Je vais explorer le codebase et créer un PRP complet.
+"""
