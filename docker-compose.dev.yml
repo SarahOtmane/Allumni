@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  # Development override for Frontend
+  client:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+      target: builder
+    command: npm run start -- --host 0.0.0.0 --poll 2000 --disable-host-check
+    volumes:
+      - ./client:/app/client
+      - /app/client/node_modules
+    ports:
+      - "4200:4200"
+    # Port 80 is defined in docker-compose.yml, 4200 is used for ng serve
+
+  # Development override for Backend
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+      target: builder
+    command: npm run start:dev
+    volumes:
+      - ./server:/app/server
+      - /app/server/node_modules
+    ports:
+      - "3000:3000"
+    env_file:
+      - server/.env
+
+  # MySQL and Redis are inherited from docker-compose.yml

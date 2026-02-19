@@ -44,8 +44,9 @@
 ## 📋 Backlog (Par Ordre de Priorité)
 
 ### Phase 1 — Setup & Infrastructure (reste à faire)
-- [ ] `docker-compose.dev.yml` (hot reload pour dev)
-- [ ] Variables d'environnement (`.env.example` - si différent de `server/.env`)
+- [x] `docker-compose.dev.yml` (hot reload pour dev)
+- [x] Variables d'environnement (`.env.example`)
+- [x] PRP Créé : `PRPs/infra-dev-environment-setup.md`
 
 ### Phase 2 — Backend Foundation
 - [ ] Initialisation NestJS avec modules de base
