@@ -10,8 +10,10 @@ import { User } from '../../core/services/auth.service';
     <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-8 shadow-sm">
       <div class="flex items-center">
         <!-- Breadcrumb placeholder or Page title -->
-        <span class="text-gray-400 mr-2">Admin /</span>
-        <span class="font-medium text-gray-700">Vue d'ensemble</span>
+        @if (breadcrumbPrefix) {
+          <span class="text-gray-400 mr-2">{{ breadcrumbPrefix }} /</span>
+        }
+        <span class="font-medium text-gray-700">{{ pageTitle }}</span>
       </div>
 
       <div class="flex items-center space-x-6">
@@ -40,5 +42,7 @@ import { User } from '../../core/services/auth.service';
 })
 export class HeaderComponent {
   @Input() user: User | null = null;
+  @Input() breadcrumbPrefix: string = '';
+  @Input() pageTitle: string = "Vue d'ensemble";
   @Output() logout = new EventEmitter<void>();
 }
