@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, effect } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { JobsService, JobOffer } from '../../../../core/services/jobs.service';
@@ -132,8 +132,9 @@ export class AlumniJobListComponent implements OnInit {
       sort: (this.sortFilter.value as 'ASC' | 'DESC') || 'DESC'
     };
 
-    // Note: I need to update the service to support these params if not already done
-    // Let's check JobsService in client
-    this.jobsService.getJobsWithFilters(filters).subscribe(data => this.jobs.set(data));
+    this.jobsService.getJobsWithFilters(filters).subscribe({
+      next: (data) => this.jobs.set(data),
+      error: (err) => console.error('Error loading jobs', err)
+    });
   }
 }
