@@ -1,7 +1,8 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { tap } from 'rxjs/operators';
+import { catchError, map, tap } from 'rxjs/operators';
+import { of, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface User {
@@ -51,12 +52,19 @@ export class AuthService {
     return !!this.getToken();
   }
 
-  // Load user profile on app start if token exists
-  checkAuth() {
+  checkAuth(): Observable<boolean> {
     const token = this.getToken();
-    if (token) {
-      return this.http.get<User>(`${this.apiUrl}/me`).pipe(tap((user) => this.currentUser.set(user)));
-    }
-    return null;
+    if (!token) return of(false);
+
+    return this.http.get<User>(`${this.apiUrl}/me`).pipe(
+      map((user) => {
+        this.currentUser.set(user);
+        return true;
+      }),
+      catchError(() => {
+        this.logout();
+        return of(false);
+      }),
+    );
   }
 }
