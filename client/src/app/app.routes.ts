@@ -82,7 +82,7 @@ export const routes: Routes = [
       children: [
         {
           path: '',
-          redirectTo: 'jobs',
+          redirectTo: '/portal/jobs',
           pathMatch: 'full',
         },
         {
