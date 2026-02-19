@@ -34,6 +34,22 @@ import { AuthService } from '../../core/services/auth.service';
           </a>
 
           <a
+            routerLink="/portal/directory"
+            routerLinkActive="bg-indigo-800 text-white border-l-4 border-white"
+            class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-indigo-800 transition-all group"
+          >
+            <svg class="h-5 w-5 mr-3 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+              />
+            </svg>
+            Annuaire
+          </a>
+
+          <a
             routerLink="/portal/events"
             routerLinkActive="bg-indigo-800 text-white border-l-4 border-white"
             class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-indigo-800 transition-all group"
@@ -58,7 +74,12 @@ import { AuthService } from '../../core/services/auth.service';
       <!-- Main Content Area -->
       <div class="flex-1 flex flex-col overflow-hidden">
         <!-- Reusing HeaderComponent -->
-        <app-header [user]="authService.currentUser()" (logout)="onLogout()"></app-header>
+        <app-header
+          [user]="authService.currentUser()"
+          (logout)="onLogout()"
+          breadcrumbPrefix="Alumni"
+          pageTitle="Espace Membre"
+        ></app-header>
 
         <!-- Main Content -->
         <main class="flex-1 overflow-y-auto bg-gray-50">

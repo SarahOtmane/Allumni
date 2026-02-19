@@ -16,7 +16,12 @@ import { AuthService } from '../../core/services/auth.service';
       <!-- Main Content Area -->
       <div class="flex-1 flex flex-col overflow-hidden">
         <!-- Header -->
-        <app-header [user]="authService.currentUser()" (logout)="onLogout()" />
+        <app-header
+          [user]="authService.currentUser()"
+          (logout)="onLogout()"
+          breadcrumbPrefix="Admin"
+          pageTitle="Vue d'ensemble"
+        />
 
         <!-- Main Content -->
         <main class="flex-1 overflow-y-auto bg-gray-50">
