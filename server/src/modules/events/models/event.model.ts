@@ -15,7 +15,7 @@ export class Event extends Model {
   @Column({ type: DataType.UUID, allowNull: false })
   author_id: string;
 
-  @BelongsTo(() => User)
+  @BelongsTo(() => User, { as: 'author', foreignKey: 'author_id' })
   author: User;
 
   @Column({ type: DataType.STRING, allowNull: false })
