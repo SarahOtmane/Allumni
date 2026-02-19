@@ -17,4 +17,8 @@ export class UsersService {
   invite(email: string, role: string) {
     return this.http.post(`${this.apiUrl}/invite`, { email, role });
   }
+
+  deleteUser(id: string) {
+    return this.http.delete(`${this.apiUrl}/${id}`);
+  }
 }

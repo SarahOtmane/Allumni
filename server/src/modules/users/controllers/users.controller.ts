@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Get } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, Delete, Param, BadRequestException, NotFoundException } from '@nestjs/common';
 import { AuthService } from '../../auth/auth.service';
 import { InviteUserDto } from '../dto/invite-user.dto';
 import { RolesGuard } from '../../../common/guards/roles.guard';
@@ -35,5 +35,22 @@ export class UsersController {
       attributes: ['id', 'email', 'role', 'is_active', 'created_at'],
       order: [['created_at', 'DESC']],
     });
+  }
+
+  @Delete(':id')
+  @Roles('ADMIN')
+  async remove(@Param('id') id: string) {
+    const user = await this.userModel.findByPk(id);
+
+    if (!user) {
+      throw new NotFoundException('Utilisateur non trouvé');
+    }
+
+    if (user.role === 'ADMIN') {
+      throw new BadRequestException('Impossible de supprimer un compte administrateur');
+    }
+
+    await user.destroy();
+    return { message: 'Membre de l\'équipe supprimé avec succès' };
   }
 }
