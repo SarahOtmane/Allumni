@@ -6,14 +6,17 @@ import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 
-@Controller('events')
+@Controller('event-management')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
   @Post()
   @Roles('ADMIN')
-  create(@Body() createEventDto: CreateEventDto, @Request() req) {
+  async create(@Body() createEventDto: CreateEventDto, @Request() req) {
+    console.log('--- CREATE EVENT ---');
+    console.log('Payload:', createEventDto);
+    console.log('User:', req.user);
     return this.eventsService.create(createEventDto, req.user.id);
   }
 
