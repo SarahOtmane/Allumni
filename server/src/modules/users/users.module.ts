@@ -6,10 +6,7 @@ import { AuthModule } from '../auth/auth.module';
 import { forwardRef } from '@nestjs/common';
 
 @Module({
-  imports: [
-    SequelizeModule.forFeature([User]),
-    forwardRef(() => AuthModule),
-  ],
+  imports: [SequelizeModule.forFeature([User]), forwardRef(() => AuthModule)],
   controllers: [UsersController],
   exports: [SequelizeModule],
 })

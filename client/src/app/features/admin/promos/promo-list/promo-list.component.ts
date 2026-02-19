@@ -69,7 +69,10 @@ export class PromoListComponent implements OnInit {
   }
 
   loadPromos() {
-    this.alumniService.getPromos().subscribe((data) => this.promos.set(data));
+    this.alumniService.getPromos().subscribe((data) => {
+      const sorted = [...data].sort((a, b) => b.year - a.year);
+      this.promos.set(sorted);
+    });
   }
 
   addYear() {
