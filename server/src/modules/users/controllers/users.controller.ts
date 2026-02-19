@@ -1,4 +1,14 @@
-import { Controller, Post, Body, UseGuards, Get, Delete, Param, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Get,
+  Delete,
+  Param,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { AuthService } from '../../auth/auth.service';
 import { InviteUserDto } from '../dto/invite-user.dto';
 import { RolesGuard } from '../../../common/guards/roles.guard';
@@ -51,6 +61,6 @@ export class UsersController {
     }
 
     await user.destroy();
-    return { message: 'Membre de l\'équipe supprimé avec succès' };
+    return { message: "Membre de l'équipe supprimé avec succès" };
   }
 }
