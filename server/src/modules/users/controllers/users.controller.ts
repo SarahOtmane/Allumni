@@ -24,7 +24,7 @@ export class UsersController {
   }
 
   @Get('team')
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'STAFF')
   async getTeam() {
     return this.userModel.findAll({
       where: {

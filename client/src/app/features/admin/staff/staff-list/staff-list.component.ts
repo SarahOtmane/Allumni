@@ -2,7 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UsersService } from '../../services/users.service';
-import { User } from '../../../../core/services/auth.service';
+import { User, AuthService } from '../../../../core/services/auth.service';
 import { ConfirmModalComponent } from '../../../../shared/components/confirm-modal/confirm-modal.component';
 
 @Component({
@@ -16,41 +16,43 @@ import { ConfirmModalComponent } from '../../../../shared/components/confirm-mod
       </header>
 
       <!-- Formulaire d'invitation rapide -->
-      <section class="mb-8 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-        <h2 class="text-lg font-semibold mb-4 text-gray-800">Inviter un nouveau membre</h2>
-        <form [formGroup]="inviteForm" (ngSubmit)="onInvite()" class="flex flex-col sm:flex-row gap-4">
-          <div class="flex-1">
-            <input
-              type="email"
-              formControlName="email"
-              placeholder="Adresse email"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-            />
-          </div>
-          <div class="w-full sm:w-48">
-            <select
-              formControlName="role"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all appearance-none bg-white"
+      @if (authService.currentUser()?.role === 'ADMIN') {
+        <section class="mb-8 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <h2 class="text-lg font-semibold mb-4 text-gray-800">Inviter un nouveau membre</h2>
+          <form [formGroup]="inviteForm" (ngSubmit)="onInvite()" class="flex flex-col sm:flex-row gap-4">
+            <div class="flex-1">
+              <input
+                type="email"
+                formControlName="email"
+                placeholder="Adresse email"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+              />
+            </div>
+            <div class="w-full sm:w-48">
+              <select
+                formControlName="role"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all appearance-none bg-white"
+              >
+                <option value="STAFF">Staff (Lecture)</option>
+                <option value="ADMIN">Admin (Total)</option>
+              </select>
+            </div>
+            <button
+              type="submit"
+              [disabled]="inviteForm.invalid || isSubmitting()"
+              class="px-6 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm"
             >
-              <option value="STAFF">Staff (Lecture)</option>
-              <option value="ADMIN">Admin (Total)</option>
-            </select>
-          </div>
-          <button
-            type="submit"
-            [disabled]="inviteForm.invalid || isSubmitting()"
-            class="px-6 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm"
-          >
-            {{ isSubmitting() ? 'Envoi...' : "Envoyer l'invitation" }}
-          </button>
-        </form>
-        @if (errorMsg()) {
-          <p class="mt-2 text-sm text-red-600 font-medium">{{ errorMsg() }}</p>
-        }
-        @if (successMsg()) {
-          <p class="mt-2 text-sm text-green-600 font-medium">{{ successMsg() }}</p>
-        }
-      </section>
+              {{ isSubmitting() ? 'Envoi...' : "Envoyer l'invitation" }}
+            </button>
+          </form>
+          @if (errorMsg()) {
+            <p class="mt-2 text-sm text-red-600 font-medium">{{ errorMsg() }}</p>
+          }
+          @if (successMsg()) {
+            <p class="mt-2 text-sm text-green-600 font-medium">{{ successMsg() }}</p>
+          }
+        </section>
+      }
 
       <!-- Liste des membres -->
       <div class="bg-white shadow overflow-hidden sm:rounded-lg border border-gray-200">
@@ -133,6 +135,7 @@ import { ConfirmModalComponent } from '../../../../shared/components/confirm-mod
 })
 export class StaffListComponent implements OnInit {
   private userService = inject(UsersService);
+  authService = inject(AuthService);
 
   team = signal<Partial<User>[]>([]);
   isSubmitting = signal(false);

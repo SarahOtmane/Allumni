@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AlumniService, Promotion } from '../../../../core/services/alumni.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   standalone: true,
@@ -15,21 +16,23 @@ import { AlumniService, Promotion } from '../../../../core/services/alumni.servi
           <p class="text-gray-600">Gérez les années de diplôme et les étudiants</p>
         </div>
 
-        <div class="flex items-center space-x-2">
-          <input
-            type="number"
-            [formControl]="yearControl"
-            placeholder="Ex: 2025"
-            class="block w-32 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-          />
-          <button
-            (click)="addYear()"
-            [disabled]="yearControl.invalid"
-            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
-          >
-            Ajouter une année
-          </button>
-        </div>
+        @if (authService.currentUser()?.role === 'ADMIN') {
+          <div class="flex items-center space-x-2">
+            <input
+              type="number"
+              [formControl]="yearControl"
+              placeholder="Ex: 2025"
+              class="block w-32 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+            <button
+              (click)="addYear()"
+              [disabled]="yearControl.invalid"
+              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+            >
+              Ajouter une année
+            </button>
+          </div>
+        }
       </header>
 
       <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -60,6 +63,7 @@ import { AlumniService, Promotion } from '../../../../core/services/alumni.servi
 })
 export class PromoListComponent implements OnInit {
   private alumniService = inject(AlumniService);
+  authService = inject(AuthService);
 
   promos = signal<Promotion[]>([]);
   yearControl = new FormControl<number | null>(null, [Validators.required, Validators.min(1900), Validators.max(2100)]);

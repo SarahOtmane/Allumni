@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AlumniService, Alumni } from '../../../../core/services/alumni.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { CsvInstructionsModalComponent } from '../../../../shared/components/csv-instructions-modal/csv-instructions-modal.component';
 import { AlumniEditModalComponent } from '../alumni-edit-modal/alumni-edit-modal.component';
 import { ConfirmModalComponent } from '../../../../shared/components/confirm-modal/confirm-modal.component';
@@ -28,22 +29,23 @@ export interface ImportSummary {
           <h1 class="text-2xl font-bold text-gray-900">Promotion {{ year() }}</h1>
         </div>
 
-        <button
-          (click)="showImportModal.set(true)"
-          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm"
-        >
-          <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-            />
-          </svg>
-          Importer via CSV
-        </button>
+        @if (authService.currentUser()?.role === 'ADMIN') {
+          <button
+            (click)="showImportModal.set(true)"
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm"
+          >
+            <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+              />
+            </svg>
+            Importer via CSV
+          </button>
+        }
       </header>
-
       @if (importSummary()) {
         <div class="mb-6 bg-white border rounded-lg p-4 shadow-sm">
           <h3 class="font-bold text-lg mb-2">Résultat de l'import :</h3>
@@ -147,36 +149,37 @@ export interface ImportSummary {
                       {{ alumnus.user?.is_active ? 'Actif' : 'En attente' }}
                     </span>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      (click)="onEditAlumnus(alumnus)"
-                      class="text-indigo-600 hover:text-indigo-900 mr-3"
-                      title="Modifier"
-                    >
-                      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                        />
-                      </svg>
-                    </button>
-                    <button
-                      (click)="onDeleteClick(alumnus.id)"
-                      class="text-red-600 hover:text-red-900"
-                      title="Supprimer"
-                    >
-                      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h14"
-                        />
-                      </svg>
-                    </button>
-                  </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                      @if (authService.currentUser()?.role === 'ADMIN') {
+                                        <button
+                                          (click)="onEditAlumnus(alumnus)"
+                                          class="text-indigo-600 hover:text-indigo-900 mr-3"
+                                          title="Modifier"
+                                        >
+                                          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path
+                                              stroke-linecap="round"
+                                              stroke-linejoin="round"
+                                              stroke-width="2"
+                                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                            />
+                                          </svg>
+                                        </button>
+                                        <button (click)="onDeleteClick(alumnus.id)" class="text-red-600 hover:text-red-900" title="Supprimer">
+                                          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path
+                                              stroke-linecap="round"
+                                              stroke-linejoin="round"
+                                              stroke-width="2"
+                                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h14"
+                                            />
+                                          </svg>
+                                        </button>
+                                      } @else {
+                                        <span class="text-gray-300 italic text-xs">Lecture seule</span>
+                                      }
+                                    </td>
+                  
                 </tr>
               } @empty {
                 <tr>
@@ -217,6 +220,7 @@ export interface ImportSummary {
 export class PromoDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private alumniService = inject(AlumniService);
+  authService = inject(AuthService);
 
   year = signal<number>(0);
   alumni = signal<Alumni[]>([]);

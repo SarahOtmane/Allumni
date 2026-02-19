@@ -12,7 +12,7 @@ export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
   @Post()
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'STAFF')
   async create(@Body() createEventDto: CreateEventDto, @Request() req) {
     console.log('--- CREATE EVENT ---');
     console.log('Payload:', createEventDto);
@@ -33,13 +33,13 @@ export class EventsController {
   }
 
   @Patch(':id')
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'STAFF')
   update(@Param('id') id: string, @Body() updateEventDto: UpdateEventDto) {
     return this.eventsService.update(id, updateEventDto);
   }
 
   @Delete(':id')
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'STAFF')
   remove(@Param('id') id: string) {
     return this.eventsService.remove(id);
   }

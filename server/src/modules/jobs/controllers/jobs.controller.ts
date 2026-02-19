@@ -12,7 +12,7 @@ export class JobsController {
   constructor(private readonly jobsService: JobsService) {}
 
   @Post()
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'STAFF')
   create(@Body() createJobDto: CreateJobDto, @Request() req) {
     return this.jobsService.create(createJobDto, req.user.id);
   }
@@ -30,13 +30,13 @@ export class JobsController {
   }
 
   @Patch(':id')
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'STAFF')
   update(@Param('id') id: string, @Body() updateJobDto: UpdateJobDto) {
     return this.jobsService.update(id, updateJobDto);
   }
 
   @Delete(':id')
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'STAFF')
   remove(@Param('id') id: string) {
     return this.jobsService.remove(id);
   }
