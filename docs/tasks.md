@@ -50,7 +50,11 @@
 
 ### Phase 2 — Backend Foundation
 - [x] PRP Créé : `PRPs/backend-foundation-models-routes.md` (Définition Modèles & Routes)
-- [ ] Initialisation NestJS avec modules de base
+- [x] Initialisation NestJS avec modules de base (Users, Auth, Alumni, Jobs, Events, Chat)
+- [x] Configuration Sequelize & Migrations initiales
+- [x] Implémentation de tous les modèles Sequelize
+- [x] Mise en place du RBAC (Roles Decorator & Guard)
+- [ ] Module `auth` (JWT Strategy, Guards, Login/Register)
 - [ ] Module `auth` (JWT Strategy, Guards, Login/Register)
 - [ ] Module `users` (Entity, Service, Controller)
 - [ ] Migration Sequelize : table `users`
