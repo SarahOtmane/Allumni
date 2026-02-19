@@ -17,7 +17,7 @@ export interface AlumniEvent {
 })
 export class EventsService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/events`;
+  private apiUrl = `${environment.apiUrl}/event-management`;
 
   getEvents() {
     return this.http.get<AlumniEvent[]>(this.apiUrl);
