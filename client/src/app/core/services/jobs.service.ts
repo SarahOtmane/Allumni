@@ -36,6 +36,10 @@ export class JobsService {
     return this.http.post<JobOffer>(this.apiUrl, job);
   }
 
+  updateJob(id: string, job: Partial<JobOffer>) {
+    return this.http.patch<JobOffer>(`${this.apiUrl}/${id}`, job);
+  }
+
   deleteJob(id: string) {
     return this.http.delete(`${this.apiUrl}/${id}`);
   }

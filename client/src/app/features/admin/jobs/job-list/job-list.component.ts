@@ -52,7 +52,10 @@ import { JobsService, JobOffer } from '../../../../core/services/jobs.service';
                   {{ job.start_date | date: 'dd/MM/yyyy' }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button (click)="deleteJob(job.id)" class="text-red-600 hover:text-red-900 ml-4">Supprimer</button>
+                  <a [routerLink]="['/admin/jobs/edit', job.id]" class="text-indigo-600 hover:text-indigo-900 mr-4"
+                    >Modifier</a
+                  >
+                  <button (click)="deleteJob(job.id)" class="text-red-600 hover:text-red-900">Supprimer</button>
                 </td>
               </tr>
             } @empty {

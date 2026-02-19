@@ -1,6 +1,6 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { JobsService, JobOffer } from '../../../../core/services/jobs.service';
 
@@ -17,7 +17,9 @@ import { JobsService, JobOffer } from '../../../../core/services/jobs.service';
             </svg>
             Retour aux offres
           </a>
-          <h1 class="text-2xl font-bold text-gray-900">Nouvelle Offre d'Emploi</h1>
+          <h1 class="text-2xl font-bold text-gray-900">
+            {{ isEditMode() ? "Modifier l'offre" : "Nouvelle Offre d'Emploi" }}
+          </h1>
         </div>
       </header>
 
@@ -133,18 +135,21 @@ import { JobsService, JobOffer } from '../../../../core/services/jobs.service';
             [disabled]="jobForm.invalid || isSubmitting()"
             class="px-6 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
           >
-            {{ isSubmitting() ? 'Publication...' : "Publier l'offre" }}
+            {{ isSubmitting() ? 'Traitement...' : isEditMode() ? "Modifier l'offre" : "Publier l'offre" }}
           </button>
         </div>
       </form>
     </div>
   `,
 })
-export class JobCreateComponent {
+export class JobCreateComponent implements OnInit {
   private jobsService = inject(JobsService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   isSubmitting = signal(false);
+  isEditMode = signal(false);
+  jobId: string | null = null;
 
   jobForm = new FormGroup({
     title: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -158,6 +163,34 @@ export class JobCreateComponent {
     missions: new FormControl(''),
     link: new FormControl(''),
   });
+
+  ngOnInit() {
+    this.jobId = this.route.snapshot.paramMap.get('id');
+    if (this.jobId) {
+      this.isEditMode.set(true);
+      this.loadJobData(this.jobId);
+    }
+  }
+
+  loadJobData(id: string) {
+    this.jobsService.getJob(id).subscribe({
+      next: (job) => {
+        this.jobForm.patchValue({
+          title: job.title,
+          type: job.type,
+          company: job.company,
+          location: job.location || '',
+          start_date: job.start_date ? new Date(job.start_date).toISOString().split('T')[0] : '',
+          description: job.description,
+          company_description: job.company_description || '',
+          profile_description: job.profile_description || '',
+          missions: job.missions || '',
+          link: job.link || '',
+        });
+      },
+      error: () => alert("Erreur lors du chargement de l'offre"),
+    });
+  }
 
   onSubmit() {
     if (this.jobForm.invalid) return;
@@ -178,13 +211,17 @@ export class JobCreateComponent {
       missions: val.missions || undefined,
     };
 
-    this.jobsService.createJob(payload).subscribe({
+    const request = this.isEditMode()
+      ? this.jobsService.updateJob(this.jobId!, payload)
+      : this.jobsService.createJob(payload);
+
+    request.subscribe({
       next: () => {
         this.router.navigate(['/admin/jobs']);
       },
       error: () => {
         this.isSubmitting.set(false);
-        alert("Erreur lors de la création de l'offre");
+        alert("Erreur lors de l'enregistrement de l'offre");
       },
     });
   }

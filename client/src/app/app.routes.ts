@@ -50,6 +50,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/admin/jobs/job-create/job-create.component').then((m) => m.JobCreateComponent),
       },
+      {
+        path: 'jobs/edit/:id',
+        loadComponent: () =>
+          import('./features/admin/jobs/job-create/job-create.component').then((m) => m.JobCreateComponent),
+      },
     ],
   },
 

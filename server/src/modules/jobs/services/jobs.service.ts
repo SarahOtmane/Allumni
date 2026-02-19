@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { JobOffer } from '../models/job-offer.model';
 import { CreateJobDto } from '../dto/create-job.dto';
+import { UpdateJobDto } from '../dto/update-job.dto';
 import { User } from '../../users/models/user.model';
 
 @Injectable()
@@ -26,9 +27,18 @@ export class JobsService {
   }
 
   async findOne(id: string) {
-    return this.jobOfferModel.findByPk(id, {
+    const job = await this.jobOfferModel.findByPk(id, {
       include: [{ model: User, attributes: ['id', 'email'] }],
     });
+    if (!job) {
+      throw new NotFoundException(`Offre d'emploi avec l'ID ${id} non trouvée`);
+    }
+    return job;
+  }
+
+  async update(id: string, updateJobDto: UpdateJobDto) {
+    const job = await this.findOne(id);
+    return job.update(updateJobDto);
   }
 
   async remove(id: string) {
