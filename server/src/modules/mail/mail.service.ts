@@ -11,9 +11,9 @@ export class MailService {
     await this.mailerService.sendMail({
       to: email,
       subject: 'Bienvenue sur la plateforme Alumni !',
-      template: './invitation', // .ejs extension is added automatically
+      template: 'invitation', // Chemin relatif au dossier templates défini dans le module
       context: {
-        url,
+        url: url, // On explicite la variable pour EJS
       },
     });
   }

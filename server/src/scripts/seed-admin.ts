@@ -34,7 +34,7 @@ async function bootstrap() {
     });
 
     if (!created) {
-      console.log('L'utilisateur existe déjà. Mise à jour du token...');
+      console.log("L'utilisateur existe déjà. Mise à jour du token...");
       await user.update({
         activation_token: token,
         token_expires_at: expiresAt,
@@ -44,7 +44,7 @@ async function bootstrap() {
     await mailService.sendInvitation(email, token);
     console.log(`Succès ! Invitation envoyée à ${email}`);
   } catch (error) {
-    console.error('Erreur lors de la création de l'admin:', error);
+    console.error('Erreur lors de la création de l\'admin:', error);
   } finally {
     await app.close();
   }

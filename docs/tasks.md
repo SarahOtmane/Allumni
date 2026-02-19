@@ -63,6 +63,7 @@
 - [ ] Migration Sequelize : tables `conversations`, `messages`
 
 ### Phase 3 — Frontend Foundation
+- [x] PRP Créé : `PRPs/frontend-auth-activation.md` (Page Activation)
 - [ ] Initialisation Angular avec routing
 - [ ] Layout global (Header, Sidebar)
 - [ ] Module `auth` (pages Login/Register)
