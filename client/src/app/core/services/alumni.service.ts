@@ -17,7 +17,7 @@ export interface Alumni {
   company?: string;
   status: string;
   data_enriched: boolean;
-  user: {
+  user?: {
     email: string;
     is_active: boolean;
   };
@@ -38,8 +38,12 @@ export class AlumniService {
     return this.http.post<Promotion>(`${this.apiUrl}/promos`, { year });
   }
 
-  getAlumniByYear(year: number) {
-    return this.http.get<Alumni[]>(`${this.apiUrl}/promos/${year}`);
+  getAlumniByYear(year: number, search?: string) {
+    let params = {};
+    if (search) {
+      params = { search };
+    }
+    return this.http.get<Alumni[]>(`${this.apiUrl}/promos/${year}`, { params });
   }
 
   updateAlumni(id: string, alumni: Partial<Alumni> & { email?: string }) {
