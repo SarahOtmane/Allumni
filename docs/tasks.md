@@ -5,7 +5,7 @@
 
 ## État Actuel du Projet
 
-**Phase :** 🚧 Initialisation  
+**Phase :** ✅ Monorepo Initialisé  
 **Dernière mise à jour :** 2026-02-18
 
 ---
@@ -18,30 +18,34 @@
 - [x] Documentation patterns de code (`ai_docs/patterns.md`)
 - [x] Documentation services (`ai_docs/services.md`)
 - [x] `GEMINI.md` créé à la racine
-- [x] `docs/TASKS.md` créé
+- [x] `ai_docs/tasks.md` créé (Initialement dans `docs/tasks.md`, déplacé/consolidé ici)
 - [x] Méthodologie PRP (`concept_library/cc_PRP_flow/`)
 - [x] Commandes Gemini CLI (`.gemini/commands/`)
-- [x] PRP d'initialisation créé (`PRPs/project-setup.md`)
+- [x] PRP d'initialisation créé (`PRPs/00-initialization.md`)
+- [x] **Exécution du PRP d'initialisation** :
+    - [x] Initialisation du monorepo (structure de dossiers `client/`, `server/`)
+    - [x] `docker-compose.yml` principal (mysql, redis, server, client, nginx)
+    - [x] Dockerfiles (client Angular, server NestJS)
+    - [x] Config Nginx (reverse proxy pour Angular)
+    - [x] `server/.env` (variables d'environnement initiales)
+    - [x] ESLint configuré (client + server, configs autonomes)
+    - [x] Prettier configuré (client + server, config commune racine)
+    - [x] Confirmation "Hello World" Frontend (Angular)
+    - [x] Confirmation "Hello World" Backend (NestJS API)
 
 ---
 
 ## 🔄 En Cours
 
-- [ ] **Exécuter le PRP d'initialisation** via Gemini CLI
+- [ ] Aucune tâche en cours suite à l'initialisation du monorepo.
 
 ---
 
 ## 📋 Backlog (Par Ordre de Priorité)
 
-### Phase 1 — Setup & Infrastructure
-- [ ] Initialisation du monorepo (structure de dossiers)
-- [ ] `docker-compose.yml` principal (mysql, redis, server, client, nginx)
+### Phase 1 — Setup & Infrastructure (reste à faire)
 - [ ] `docker-compose.dev.yml` (hot reload pour dev)
-- [ ] Dockerfiles (client Angular, server NestJS)
-- [ ] Config Nginx (reverse proxy)
-- [ ] Variables d'environnement (`.env.example`)
-- [ ] ESLint configuré (client + server)
-- [ ] Prettier configuré (client + server, config commune)
+- [ ] Variables d'environnement (`.env.example` - si différent de `server/.env`)
 
 ### Phase 2 — Backend Foundation
 - [ ] Initialisation NestJS avec modules de base
@@ -80,10 +84,4 @@
 
 ## 🚀 Prochaine Étape
 
-**Exécuter le PRP d'initialisation** dans Gemini CLI :
-
-```bash
-gemini
-# Puis :
-> Lis GEMINI.md et ai_docs/, puis implémente le PRP PRPs/project-setup.md
-```
+**Proposer un PRP pour la "Phase 2 — Backend Foundation"** : Initialisation des modules NestJS de base et du module `auth`.

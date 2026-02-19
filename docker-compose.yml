@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # Frontend Service (Angular + Nginx)
+  client:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+      args:
+        - NGINX_VERSION=1.25.3 # Use a specific Nginx version
+    ports:
+      - "80:80"
+    depends_on:
+      - server
+    networks:
+      - alumni-network
+
+  # Backend Service (NestJS)
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development # Or production based on deployment
+      DB_HOST: mysql_db
+      DB_PORT: 3306
+      DB_USER: ${MYSQL_USER:-alumni_user}
+      DB_PASS: ${MYSQL_PASSWORD:-alumni_password}
+      DB_NAME: ${MYSQL_DATABASE:-alumni_db}
+      REDIS_HOST: redis_cache
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-super_secret_jwt_key}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-1d}
+      PORT: 3000
+    depends_on:
+      - mysql_db
+      - redis_cache
+    networks:
+      - alumni-network
+
+  # Database Service (MySQL)
+  mysql_db:
+    image: mysql:8.0
+    ports:
+      - "33060:3306" # Expose a different host port to avoid conflict
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-alumni_db}
+      MYSQL_USER: ${MYSQL_USER:-alumni_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-alumni_password}
+    volumes:
+      - mysql_data:/var/lib/mysql # Persistent data storage
+    networks:
+      - alumni-network
+    command: --default-authentication-plugin=mysql_native_password # For compatibility with older clients if needed
+
+  # Redis Service (for BullMQ)
+  redis_cache:
+    image: redis:6.2-alpine
+    ports:
+      - "63790:6379" # Expose a different host port to avoid conflict
+    volumes:
+      - redis_data:/data # Persistent data storage
+    networks:
+      - alumni-network
+
+volumes:
+  mysql_data:
+  redis_data:
+  client_build: # Volume to share Angular build output with Nginx
+
+networks:
+  alumni-network:
+    driver: bridge

@@ -1,0 +1,49 @@
+# Node
+node_modules
+.env
+.DS_Store
+
+# Docker
+*.log
+!docker-compose.yml
+!Dockerfile*
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.vscode
+.idea
+.vs
+*.bak
+*.swp
+*~
+.tmp
+.web
+.history
+.output
+.publish
+.npm
+
+# Build
+dist
+build
+tmp
+.angular
+.cache
+coverage
+
+# NestJS
+/server/dist
+/server/coverage
+/server/.env
+
+# Angular
+/client/dist
+/client/coverage
+/client/.angular
+/client/node_modules
