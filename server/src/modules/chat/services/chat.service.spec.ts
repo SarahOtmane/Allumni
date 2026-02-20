@@ -9,7 +9,6 @@ import { ConversationParticipant } from '../models/conversation-participant.mode
 
 describe('ChatService', () => {
   let service: ChatService;
-  let conversationModel: any;
   let participantModel: any;
   let messageModel: any;
 
@@ -63,7 +62,6 @@ describe('ChatService', () => {
     }).compile();
 
     service = module.get<ChatService>(ChatService);
-    conversationModel = module.get(getModelToken(Conversation));
     participantModel = module.get(getModelToken(ConversationParticipant));
     messageModel = module.get(getModelToken(Message));
   });

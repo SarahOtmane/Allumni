@@ -1,16 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/sequelize';
-import { NotFoundException, ConflictException } from '@nestjs/common';
+import { ConflictException } from '@nestjs/common';
 import { EventsService } from './events.service';
 import { Event } from '../models/event.model';
 import { EventRegistration } from '../models/event-registration.model';
-import { NotificationsService } from '../../notifications/services/notifications.service';
 
 describe('EventsService', () => {
   let service: EventsService;
   let eventModel: any;
   let registrationModel: any;
-  let notificationsService: any;
 
   const mockEventModel = {
     create: jest.fn(),
@@ -40,17 +38,12 @@ describe('EventsService', () => {
           provide: getModelToken(EventRegistration),
           useValue: mockRegistrationModel,
         },
-        {
-          provide: NotificationsService,
-          useValue: mockNotificationsService,
-        },
       ],
     }).compile();
 
     service = module.get<EventsService>(EventsService);
     eventModel = module.get(getModelToken(Event));
     registrationModel = module.get(getModelToken(EventRegistration));
-    notificationsService = module.get(NotificationsService);
   });
 
   it('should be defined', () => {
