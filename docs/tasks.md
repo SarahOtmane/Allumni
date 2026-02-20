@@ -62,6 +62,7 @@
 - [ ] Gestion des erreurs et retry (profils privés, etc.)
 
 ### Phase 6 — Communication & Engagement
+- [x] PRP Créé : `PRPs/alumni-messaging.md`
 - [ ] Messagerie interne (Conversations + Messages temps réel)
 - [ ] Système de notifications (Email/In-app pour nouvelles offres ou events)
 
@@ -75,4 +76,4 @@
 
 ## 🚀 Prochaine Étape
 
-**Implémenter le pipeline de scraping LinkedIn** pour enrichir automatiquement les profils alumni importés.
+**Implémenter la messagerie instantanée temps réel** entre Alumni.
