@@ -4,6 +4,12 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
+# Install dependencies for headless Chrome
+RUN apk add --no-cache chromium nss freetype freetype-dev harfbuzz ca-certificates ttf-freefont
+
+# Set Chrome binary path for Angular tests
+ENV CHROME_BIN=/usr/bin/chromium-browser
+
 # Copy root package.json and lock file first for monorepo context
 COPY package.json package-lock.json ./
 
