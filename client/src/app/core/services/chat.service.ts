@@ -30,12 +30,14 @@ export class ChatService {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
   private apiUrl = `${environment.apiUrl}/chat`;
-  private socketUrl = environment.apiUrl.replace('/api', '/chat');
+  private socketUrl = environment.apiUrl.replace('/api', '');
   private socket: Socket | null = null;
 
   private messageSubject = new Subject<Message>();
 
   connect() {
+    if (this.socket?.connected) return;
+
     const token = this.authService.getToken();
     if (!token) return;
 
@@ -46,9 +48,6 @@ export class ChatService {
     this.socket.on('newMessage', (message: Message) => {
       this.messageSubject.next(message);
     });
-
-    this.socket.on('connect', () => console.log('Connected to Chat WebSocket'));
-    this.socket.on('connect_error', (err) => console.error('WS Connection Error:', err));
   }
 
   disconnect() {
@@ -65,9 +64,8 @@ export class ChatService {
   }
 
   sendMessage(conversationId: string, content: string) {
-    if (this.socket) {
-      this.socket.emit('sendMessage', { conversationId, content });
-    }
+    // Send via REST for better reliability
+    return this.http.post<Message>(`${this.apiUrl}/messages`, { conversationId, content });
   }
 
   onNewMessage(): Observable<Message> {

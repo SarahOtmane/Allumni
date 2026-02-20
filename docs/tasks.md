@@ -64,8 +64,8 @@
 ### Phase 6 — Communication & Engagement
 - [x] PRP Créé : `PRPs/alumni-messaging.md`
 - [x] PRP Créé : `PRPs/admin-messaging.md`
-- [ ] Messagerie instantanée entre Alumni (temps réel)
-- [ ] Messagerie Admin/Staff vers tous les utilisateurs
+- [x] Messagerie instantanée entre Alumni (temps réel)
+- [x] Messagerie Admin/Staff vers tous les utilisateurs
 - [ ] Système de notifications (Email/In-app pour nouvelles offres ou events)
 
 ### Phase 7 — Finalisation & Déploiement
@@ -78,4 +78,4 @@
 
 ## 🚀 Prochaine Étape
 
-**Implémenter la messagerie Admin/Staff** pour permettre le support et la coordination.
+**Implémenter le pipeline de scraping LinkedIn** pour enrichir automatiquement les profils alumni importés.

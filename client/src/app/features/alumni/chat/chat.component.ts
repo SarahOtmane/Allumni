@@ -228,8 +228,15 @@ export class AlumniChatComponent implements OnInit, OnDestroy, AfterViewChecked 
     event.preventDefault();
     if (!this.newMessageContent.trim() || !this.selectedConvId()) return;
 
-    this.chatService.sendMessage(this.selectedConvId()!, this.newMessageContent);
+    const content = this.newMessageContent;
     this.newMessageContent = '';
+
+    this.chatService.sendMessage(this.selectedConvId()!, content).subscribe({
+      error: () => {
+        // Optional: Show error to user or restore content
+        console.error('Failed to send message');
+      }
+    });
   }
 
   getOtherParticipant(conv: Conversation | undefined) {
