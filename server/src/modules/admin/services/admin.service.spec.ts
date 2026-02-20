@@ -58,9 +58,9 @@ describe('AdminService', () => {
       mockAlumniProfileModel.count.mockResolvedValue(5); // promotionsCount
       mockUserModel.count
         .mockResolvedValueOnce(100) // totalAlumni
-        .mockResolvedValueOnce(80)  // activeAlumni
-        .mockResolvedValueOnce(10)  // staffCount
-        .mockResolvedValueOnce(2);   // adminCount
+        .mockResolvedValueOnce(80) // activeAlumni
+        .mockResolvedValueOnce(10) // staffCount
+        .mockResolvedValueOnce(2); // adminCount
       mockEventModel.count.mockResolvedValue(15);
       mockJobOfferModel.count.mockResolvedValue(25);
 
