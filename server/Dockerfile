@@ -24,6 +24,21 @@ FROM node:18-alpine AS runner
 
 WORKDIR /app
 
+# Install Puppeteer dependencies
+RUN apk add --no-cache \
+      chromium \
+      nss \
+      freetype \
+      harfbuzz \
+      ca-certificates \
+      ttf-freefont \
+      nodejs \
+      yarn
+
+# Skip downloading Chromium since we installed it via apk
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
 # Copy root package.json and lock file for runtime
 COPY package.json package-lock.json ./
 

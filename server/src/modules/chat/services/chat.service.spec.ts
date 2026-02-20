@@ -82,9 +82,11 @@ describe('ChatService', () => {
       const result = await service.getMessages(convId, userId);
 
       expect(result).toHaveLength(1);
-      expect(messageModel.findAll).toHaveBeenCalledWith(expect.objectContaining({
-        where: { conversation_id: convId }
-      }));
+      expect(messageModel.findAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { conversation_id: convId },
+        }),
+      );
     });
 
     it('should throw ForbiddenException if user is not a participant', async () => {
@@ -104,7 +106,7 @@ describe('ChatService', () => {
       expect(messageModel.create).toHaveBeenCalledWith({
         conversation_id: 'c1',
         sender_id: 'u1',
-        content: 'hi'
+        content: 'hi',
       });
     });
   });

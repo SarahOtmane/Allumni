@@ -50,13 +50,14 @@
 
 ## 🔄 En Cours
 
-- [ ] Optimisation de l'UX et polissage des interfaces.
+- [ ] Implémenter le pipeline de scraping LinkedIn pour l'enrichissement des profils.
 
 ---
 
 ## 📋 Backlog (Par Ordre de Priorité)
 
 ### Phase 5 — Pipeline de Scraping (LinkedIn)
+- [x] PRP Créé : `PRPs/scraping-linkedin-current-job.md`
 - [ ] Module `scraping` NestJS
 - [ ] Producer BullMQ (ajout à la queue lors de l'import CSV)
 - [ ] Consumer/Processor Puppeteer (scraping LinkedIn pour extraire le poste actuel)

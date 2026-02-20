@@ -73,16 +73,16 @@ Ce document propose une répartition initiale des tâches de développement, org
 
 ---
 
-### 🧑‍💻 Développeur 3 : Pipeline de Scraping & Portail Alumni UI
+### 🧑‍💻 Développeur 3 : Pipeline de Scraping & Portail Alumni UI (EN COURS)
 
 **Objectif :** Mettre en place le moteur d'enrichissement de données (scraping) et développer les fonctionnalités du portail public pour les alumni.
 
 **PRPs suggérés :**
 
-1.  **PRP: `backend/scraping-module-producer`**
+1.  **PRP: `backend/scraping-module-producer` (PRP CRÉÉ : `PRPs/scraping-linkedin-current-job.md`)**
     *   **Description :** Implémenter le module NestJS `scraping` et la partie `Producer` (ajout des jobs à la queue BullMQ).
     *   **Concerne :** `server/src/modules/scraping/scraping.service.ts`.
-2.  **PRP: `backend/scraping-module-consumer`**
+2.  **PRP: `backend/scraping-module-consumer` (EN COURS)**
     *   **Description :** Implémenter la partie `Consumer` du module `scraping` (worker Puppeteer pour le scraping LinkedIn) et la gestion des retries/erreurs.
     *   **Concerne :** `server/src/modules/scraping/scraping.processor.ts`.
 3.  **PRP: `alumni-portal/directory-ui`**

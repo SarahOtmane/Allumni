@@ -8,6 +8,7 @@ import { UpdateAlumniDto } from '../dto/update-alumni.dto';
 import * as csv from 'csv-parser';
 import { Readable } from 'stream';
 import { Op } from 'sequelize';
+import { ScrapingService } from '../../scraping/services/scraping.service';
 
 @Injectable()
 export class AlumniService {
@@ -19,6 +20,7 @@ export class AlumniService {
     @InjectModel(User)
     private userModel: typeof User,
     private sequelize: Sequelize,
+    private scrapingService: ScrapingService,
   ) {}
 
   async findAllPromos() {
@@ -159,7 +161,7 @@ export class AlumniService {
                 }
 
                 // Create Profile
-                await this.alumniProfileModel.create(
+                const profile = await this.alumniProfileModel.create(
                   {
                     user_id: user.id,
                     first_name: Prénom,
@@ -170,6 +172,9 @@ export class AlumniService {
                   },
                   { transaction },
                 );
+
+                // Déclencher le scraping LinkedIn
+                await this.scrapingService.addScrapingJob(profile.id, linkedin);
 
                 summary.success++;
               } catch (err) {

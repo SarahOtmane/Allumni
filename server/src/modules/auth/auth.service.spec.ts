@@ -79,16 +79,18 @@ describe('AuthService', () => {
 
     it('should throw UnauthorizedException if user not found', async () => {
       userModel.findOne.mockResolvedValue(null);
-      await expect(service.validateUser({ email: 'wrong@test.com', password: 'password' }))
-        .rejects.toThrow(UnauthorizedException);
+      await expect(service.validateUser({ email: 'wrong@test.com', password: 'password' })).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw UnauthorizedException if password invalid', async () => {
       userModel.findOne.mockResolvedValue(mockUser);
       (argon2.verify as jest.Mock).mockResolvedValue(false);
 
-      await expect(service.validateUser({ email: 'test@test.com', password: 'wrong' }))
-        .rejects.toThrow(UnauthorizedException);
+      await expect(service.validateUser({ email: 'test@test.com', password: 'wrong' })).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 
@@ -104,7 +106,7 @@ describe('AuthService', () => {
   describe('inviteUser', () => {
     it('should create user and send mail if not exists', async () => {
       userModel.findOrCreate.mockResolvedValue([mockUser, true]);
-      
+
       const result = await service.inviteUser('new@test.com', 'ALUMNI');
 
       expect(result.message).toBe('Invitation envoyée');
@@ -113,9 +115,8 @@ describe('AuthService', () => {
 
     it('should throw BadRequestException if user already active', async () => {
       userModel.findOrCreate.mockResolvedValue([mockUser, false]); // mockUser is active
-      
-      await expect(service.inviteUser('active@test.com', 'ALUMNI'))
-        .rejects.toThrow(BadRequestException);
+
+      await expect(service.inviteUser('active@test.com', 'ALUMNI')).rejects.toThrow(BadRequestException);
     });
   });
 });
