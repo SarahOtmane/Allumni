@@ -60,9 +60,14 @@ export class NotificationService {
   }
 
   loadNotifications() {
-    this.http.get<Notification[]>(this.apiUrl).subscribe((data) => {
-      this.notifications.set(data);
-      this.unreadCount.set(data.filter((n) => !n.is_read).length);
+    this.http.get<Notification[]>(this.apiUrl).subscribe({
+      next: (data) => {
+        this.notifications.set(data);
+        this.unreadCount.set(data.filter((n) => !n.is_read).length);
+      },
+      error: (err) => {
+        console.error('Failed to load notifications:', err);
+      },
     });
   }
 
