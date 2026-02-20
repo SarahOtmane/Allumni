@@ -67,7 +67,7 @@
 - [x] Messagerie instantanée entre Alumni (temps réel)
 - [x] Messagerie Admin/Staff vers tous les utilisateurs
 - [x] Système de notifications temps réel (Messages, Jobs, Events)
-- [ ] Système de notifications (Email/In-app pour nouvelles offres ou events)
+- [ ] Système de notifications par Email (nouvelles offres ou events)
 
 ### Phase 7 — Finalisation & Déploiement
 - [x] `docker-compose.yml` de production
