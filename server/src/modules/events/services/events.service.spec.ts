@@ -4,6 +4,7 @@ import { ConflictException } from '@nestjs/common';
 import { EventsService } from './events.service';
 import { Event } from '../models/event.model';
 import { EventRegistration } from '../models/event-registration.model';
+import { NotificationsService } from '../../notifications/services/notifications.service';
 
 describe('EventsService', () => {
   let service: EventsService;
@@ -34,6 +35,12 @@ describe('EventsService', () => {
           provide: getModelToken(EventRegistration),
           useValue: mockRegistrationModel,
         },
+        {
+          provide: NotificationsService,
+          useValue: {
+            notifyAllAlumni: jest.fn().mockResolvedValue({}),
+          },
+        },
       ],
     }).compile();
 
@@ -50,12 +57,12 @@ describe('EventsService', () => {
     it('should register a user if not already registered and capacity available', async () => {
       const eventId = 'e1';
       const userId = 'u1';
-      const mockEvent = { 
-        id: eventId, 
-        max_participants: 10, 
-        participants: [], 
+      const mockEvent = {
+        id: eventId,
+        max_participants: 10,
+        participants: [],
       };
-      
+
       eventModel.findByPk.mockResolvedValue(mockEvent);
       registrationModel.findOne.mockResolvedValue(null);
       registrationModel.create.mockResolvedValue({ id: 'r1', event_id: eventId, user_id: userId });
@@ -70,7 +77,7 @@ describe('EventsService', () => {
       const eventId = 'e1';
       const userId = 'u1';
       const mockEvent = { id: eventId, max_participants: 10, participants: [] };
-      
+
       eventModel.findByPk.mockResolvedValue(mockEvent);
       registrationModel.findOne.mockResolvedValue({ id: 'r1' });
 
@@ -81,7 +88,7 @@ describe('EventsService', () => {
       const eventId = 'e1';
       const userId = 'u1';
       const mockEvent = { id: eventId, max_participants: 1, participants: [{ id: 'u2' }] };
-      
+
       eventModel.findByPk.mockResolvedValue(mockEvent);
 
       await expect(service.register(eventId, userId)).rejects.toThrow(ConflictException);
