@@ -71,6 +71,7 @@
 - [ ] Système de notifications par Email (nouvelles offres ou events)
 
 ### Phase 7 — Finalisation & Déploiement
+- [x] CI/CD : Pipeline GitHub Actions (Lint, Build, Test)
 - [x] `docker-compose.yml` de production
 - [ ] Configuration Nginx pour la production (SSL avec Certbot)
 - [ ] Scripts de backup base de données

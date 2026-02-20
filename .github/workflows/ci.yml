@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Installer docker-compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      - name: Générer le fichier .env
+        run: |
+          cat <<EOF > .env
+          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_USER=${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
+          DB_HOST=mysql_db
+          DB_PORT=3306
+          REDIS_HOST=redis_cache
+          REDIS_PORT=6379
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_EXPIRATION=1d
+          NODE_ENV=development
+          GMAIL_USER=${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD=${{ secrets.GMAIL_APP_PASSWORD }}
+          SENTRY_DSN=${{ secrets.SENTRY_DSN }}
+          MYSQL_DATABASE_TEST=${{ secrets.MYSQL_DATABASE_TEST }}
+          PORT=3000
+          EOF
+          cp .env server/.env
+
+      - name: Build and start containers
+        run: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+
+      - name: Attendre que MySQL soit prêt
+        run: |
+          for i in {1..30}; do
+            if docker-compose exec -T mysql_db mysqladmin ping -h localhost -u root -p${{ secrets.MYSQL_ROOT_PASSWORD }} --silent; then
+              echo "MySQL is ready!"
+              break
+            fi
+            echo "Waiting for MySQL..."
+            sleep 2
+          done
+
+      - name: Vérifier la qualité du code (lint) - Server
+        run: docker-compose exec -T server npm run lint
+
+      - name: Lancer les tests unitaires - Server
+        run: docker-compose exec -T server npm run test
+
+      - name: Vérifier la qualité du code (lint) - Client
+        run: docker-compose exec -T client npm run lint
+
+      - name: Lancer les tests unitaires - Client
+        run: docker-compose exec -T client npm run test -- --watch=false --browsers=ChromeHeadless
+
+      - name: Afficher les logs en cas d'échec
+        if: failure()
+        run: |
+          docker-compose logs server
+          docker-compose logs client
+
+      - name: Arrêter les containers
+        if: always()
+        run: docker-compose -f docker-compose.yml -f docker-compose.dev.yml down
