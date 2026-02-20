@@ -99,6 +99,10 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/alumni/directory/directory.component').then((m) => m.AlumniDirectoryComponent),
       },
+      {
+        path: 'chat',
+        loadComponent: () => import('./features/alumni/chat/chat.component').then((m) => m.AlumniChatComponent),
+      },
     ],
   },
   {
