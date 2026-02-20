@@ -22,10 +22,6 @@ describe('EventsService', () => {
     destroy: jest.fn(),
   };
 
-  const mockNotificationsService = {
-    notifyAllAlumni: jest.fn().mockResolvedValue({}),
-  };
-
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
