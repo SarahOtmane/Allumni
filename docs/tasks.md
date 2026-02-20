@@ -63,7 +63,9 @@
 
 ### Phase 6 — Communication & Engagement
 - [x] PRP Créé : `PRPs/alumni-messaging.md`
-- [ ] Messagerie interne (Conversations + Messages temps réel)
+- [x] PRP Créé : `PRPs/admin-messaging.md`
+- [ ] Messagerie instantanée entre Alumni (temps réel)
+- [ ] Messagerie Admin/Staff vers tous les utilisateurs
 - [ ] Système de notifications (Email/In-app pour nouvelles offres ou events)
 
 ### Phase 7 — Finalisation & Déploiement
@@ -76,4 +78,4 @@
 
 ## 🚀 Prochaine Étape
 
-**Implémenter la messagerie instantanée temps réel** entre Alumni.
+**Implémenter la messagerie Admin/Staff** pour permettre le support et la coordination.
