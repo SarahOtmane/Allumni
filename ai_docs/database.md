@@ -107,6 +107,30 @@ promotions (1:N)            → années de diplôme, liées aux alumni_profiles 
 - `title`, `description`, `date`, `location`
 - `max_participants` : INT
 
+### `notifications`
+- `id` : CHAR(36) (UUID)
+- `user_id` : CHAR(36) -> `users.id`
+- `type` : ENUM('MESSAGE', 'JOB', 'EVENT')
+- `title` : VARCHAR(255)
+- `content` : TEXT
+- `reference_id` : CHAR(36) (Optional)
+- `is_read` : BOOLEAN (Default: false)
+
+### `conversations`
+- `id` : CHAR(36) (UUID)
+
+### `conversation_participants`
+- `id` : CHAR(36) (UUID)
+- `conversation_id` : CHAR(36) -> `conversations.id`
+- `user_id` : CHAR(36) -> `users.id`
+
+### `messages`
+- `id` : CHAR(36) (UUID)
+- `conversation_id` : CHAR(36) -> `conversations.id`
+- `sender_id` : CHAR(36) -> `users.id`
+- `content` : TEXT
+- `is_read` : BOOLEAN (Default: false)
+
 ## 7. Conventions de Nommage
 
 - **Tables :** `snake_case` pluriel (`users`, `job_offers`, `alumni_profiles`)
