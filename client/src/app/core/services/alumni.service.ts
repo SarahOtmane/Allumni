@@ -8,6 +8,7 @@ export interface Promotion {
 
 export interface Alumni {
   id: string;
+  user_id: string;
   first_name: string;
   last_name: string;
   diploma: string;

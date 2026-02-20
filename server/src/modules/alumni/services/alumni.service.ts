@@ -29,10 +29,14 @@ export class AlumniService {
     return this.promotionModel.create({ year });
   }
 
-  async findByYear(year: number, userRole?: string, search?: string) {
+  async findByYear(year: number, userRole?: string, search?: string, currentUserId?: string) {
     const isAlumni = userRole === 'ALUMNI';
 
     const where: any = { promo_year: year };
+
+    if (isAlumni && currentUserId) {
+      where.user_id = { [Op.ne]: currentUserId };
+    }
 
     if (search) {
       where[Op.or] = [
@@ -44,7 +48,7 @@ export class AlumniService {
 
     return this.alumniProfileModel.findAll({
       where,
-      attributes: isAlumni ? ['id', 'first_name', 'last_name', 'current_position', 'promo_year'] : undefined,
+      attributes: isAlumni ? ['id', 'user_id', 'first_name', 'last_name', 'current_position', 'promo_year'] : undefined,
       include: isAlumni ? [] : [{ model: User, attributes: ['id', 'email', 'is_active'] }],
       order: [['last_name', 'ASC']],
     });

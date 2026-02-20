@@ -5,6 +5,8 @@ import { EventRegistration } from '../models/event-registration.model';
 import { CreateEventDto } from '../dto/create-event.dto';
 import { UpdateEventDto } from '../dto/update-event.dto';
 import { User } from '../../users/models/user.model';
+import { NotificationsService } from '../../notifications/services/notifications.service';
+import { NotificationType } from '../../notifications/models/notification.model';
 
 @Injectable()
 export class EventsService {
@@ -13,13 +15,23 @@ export class EventsService {
     private eventModel: typeof Event,
     @InjectModel(EventRegistration)
     private registrationModel: typeof EventRegistration,
+    private notificationsService: NotificationsService,
   ) {}
 
   async create(createEventDto: CreateEventDto, authorId: string) {
-    return this.eventModel.create({
+    const event = await this.eventModel.create({
       ...createEventDto,
       author_id: authorId,
     });
+
+    await this.notificationsService.notifyAllAlumni(
+      NotificationType.EVENT,
+      'Nouvel événement',
+      `L'école organise : ${event.title} le ${new Date(event.date).toLocaleDateString()}`,
+      event.id,
+    );
+
+    return event;
   }
 
   async findAll(userId?: string) {
