@@ -70,6 +70,10 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/admin/events/event-create/event-create.component').then((m) => m.EventCreateComponent),
       },
+      {
+        path: 'messages',
+        loadComponent: () => import('./features/alumni/chat/chat.component').then((m) => m.AlumniChatComponent),
+      },
     ],
   },
 
