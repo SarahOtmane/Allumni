@@ -49,6 +49,8 @@ users
 ├── job_offers (1:N)        → créées par les admins
 ├── events (1:N)            → créés par les admins
 └── conversations (N:M)     → via messages entre alumni
+
+promotions (1:N)            → années de diplôme, liées aux alumni_profiles via promo_year
 ```
 
 ### Tables Clés
@@ -56,36 +58,54 @@ users
 | Table | Description | Clés Étrangères |
 |:------|:------------|:----------------|
 | `users` | Comptes de connexion + RBAC | — |
-| `alumni_profiles` | Détails alumni enrichis via scraping LinkedIn | `user_id` → `users.id` |
-| `job_offers` | Offres d'emploi/stage publiées par l'école | `author_id` → `users.id` |
-| `events` | Événements organisés par l'école | `author_id` → `users.id` |
-| `event_registrations` | Participation des alumni aux événements | `user_id`, `event_id` |
-| `conversations` | Discussions entre alumni (1-1 ou groupe) | — |
-| `messages` | Messages échangés dans les conversations | `conversation_id`, `sender_id` |
+| `alumni_profiles` | Détails alumni enrichis | `user_id` → `users.id` |
+| `promotions` | Liste des années de promotion | — |
+| `job_offers` | Offres d'emploi/stage | `author_id` → `users.id` |
+| `events` | Événements organisés | `author_id` → `users.id` |
+| `event_registrations` | Participation aux événements | `user_id`, `event_id` |
+| `conversations` | Discussions entre alumni | — |
+| `messages` | Messages échangés | `conversation_id`, `sender_id` |
 
 ## 6. Détails des Champs (Model Sequelize)
 
 ### `users`
-- `id` : CHAR(36) — Clé Primaire (UUID)
-- `email` : VARCHAR(255) — Unique, utilisé pour la connexion
-- `password_hash` : VARCHAR(255) — Hash Argon2
+- `id` : CHAR(36) (UUID)
+- `email` : VARCHAR(255) (Unique)
+- `password_hash` : VARCHAR(255)
 - `role` : ENUM('ADMIN', 'STAFF', 'ALUMNI')
-- `created_at` : TIMESTAMP
-- `updated_at` : TIMESTAMP
+- `is_active` : BOOLEAN
+- `activation_token` : VARCHAR(255)
+- `token_expires_at` : TIMESTAMP
 
 ### `alumni_profiles`
-- `id` : CHAR(36) — Clé Primaire (UUID)
-- `user_id` : CHAR(36) — Clé Étrangère vers `users.id` (Unique)
-- `first_name` : VARCHAR(100)
-- `last_name` : VARCHAR(100)
-- `promo_year` : INT — Année de promotion
-- `diploma` : VARCHAR(100) — Diplôme obtenu
-- `linkedin_url` : VARCHAR(255) — URL du profil LinkedIn
-- `current_position` : VARCHAR(255) — Poste actuel (enrichi via scraping)
-- `status` : ENUM('OPEN_TO_WORK', 'HIRED', 'STUDENT', 'UNKNOWN') — enrichi via scraping
-- `data_enriched` : BOOLEAN — Default `false`
-- `created_at` : TIMESTAMP
-- `updated_at` : TIMESTAMP
+- `id` : CHAR(36) (UUID)
+- `user_id` : CHAR(36) -> `users.id`
+- `first_name`, `last_name`
+- `promo_year` : INT
+- `diploma`
+- `linkedin_url`
+- `current_position`, `company`
+- `status` : ENUM('OPEN_TO_WORK', 'HIRED', 'STUDENT', 'UNKNOWN')
+- `data_enriched` : BOOLEAN
+
+### `promotions`
+- `year` : INT (Primary Key)
+
+### `job_offers`
+- `id` : CHAR(36) (UUID)
+- `author_id` : CHAR(36) -> `users.id`
+- `title`, `company`, `location`
+- `type` : ENUM('CDI', 'CDD', 'PRESTATAIRE')
+- `description`, `company_description`, `profile_description`, `missions` (TEXT)
+- `start_date` : DATE
+- `link` : VARCHAR(255)
+- `status` : ENUM('ACTIVE', 'CLOSED')
+
+### `events`
+- `id` : CHAR(36) (UUID)
+- `author_id` : CHAR(36) -> `users.id`
+- `title`, `description`, `date`, `location`
+- `max_participants` : INT
 
 ## 7. Conventions de Nommage
 

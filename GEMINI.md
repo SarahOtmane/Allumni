@@ -48,8 +48,11 @@ alumni-platform/
 │       │   ├── auth/
 │       │   ├── users/
 │       │   ├── alumni/
-│       │   ├── scraping/
-│       │   └── content/
+│       │   ├── jobs/
+│       │   ├── events/
+│       │   ├── mail/
+│       │   ├── chat/
+│       │   └── scraping/
 │       ├── common/                # Decorators, DTOs, Filters
 │       └── config/
 ├── nginx/                         # Config Nginx

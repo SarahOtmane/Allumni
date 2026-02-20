@@ -36,9 +36,12 @@ alumni-platform/
 │   │   ├── modules/            # Modules par domaine
 │   │   │   ├── auth/           # JWT Strategy, Guards
 │   │   │   ├── users/          # User Entity, Services
-│   │   │   ├── alumni/         # Profils spécifiques & Data
-│   │   │   ├── scraping/       # Logique d'import CSV & Queue
-│   │   │   └── content/        # Jobs, Events
+│   │   │   ├── alumni/         # Profils spécifiques & Promos
+│   │   │   ├── jobs/           # Gestion des offres d'emploi
+│   │   │   ├── events/         # Gestion des événements
+│   │   │   ├── mail/           # Service d'envoi d'emails
+│   │   │   ├── chat/           # Messagerie interne
+│   │   │   └── scraping/       # Logique d'import CSV & Queue
 │   │   ├── common/             # Decorators, DTOs partagés, Filters
 │   │   ├── config/             # Config Sequelize & Env
 │   │   └── main.ts

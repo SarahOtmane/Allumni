@@ -6,11 +6,14 @@ Ce document recense les services principaux de l'application Alumni.
 
 | Service | Module | Description |
 |:--------|:-------|:------------|
-| **AuthService** | `auth` | Gestion JWT, Login, Register, Hashing (Argon2) |
-| **AlumniService** | `alumni` | Logique métier profils (Recherche, Filtres, Vue restreinte) |
-| **StatsService** | `admin` | Agrégation des KPIs pour le dashboard |
-| **ScrapingService** | `scraping` | Orchestration du scraping LinkedIn (Puppeteer) |
-| **ScrapingQueue** | `scraping` | Gestion de la file d'attente Redis (BullMQ) |
+| **AuthService** | `auth` | Gestion JWT, Login, Register, Activation (Argon2) |
+| **AlumniService** | `alumni` | Logique métier profils, Promos, Import CSV |
+| **UsersService** | `users` | Gestion des comptes, Invitations Team |
+| **JobsService** | `jobs` | CRUD Offres d'emploi, Filtres |
+| **EventsService** | `events` | CRUD Événements, Inscriptions |
+| **MailService** | `mail` | Envoi d'emails (Nodemailer/Handlebars) |
+| **AdminService** | `admin` | Agrégation des KPIs pour le dashboard |
+| **ScrapingService** | `scraping` | (En attente) Orchestration du scraping LinkedIn |
 
 ### Focus : Le Service de Scraping (Asynchrone)
 
