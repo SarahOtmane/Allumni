@@ -4,6 +4,8 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { UsersService } from '../../services/users.service';
 import { User, AuthService } from '../../../../core/services/auth.service';
 import { ConfirmModalComponent } from '../../../../shared/components/confirm-modal/confirm-modal.component';
+import { ChatService } from '../../../../core/services/chat.service';
+import { Router } from '@angular/router';
 
 @Component({
   standalone: true,
@@ -93,6 +95,15 @@ import { ConfirmModalComponent } from '../../../../shared/components/confirm-mod
                   {{ member.created_at | date: 'dd/MM/yyyy' }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium">
+                  @if (member.id !== authService.currentUser()?.id) {
+                    <button
+                      (click)="onContactMember(member.id!)"
+                      class="text-indigo-600 hover:text-indigo-900 mr-4"
+                      title="Contacter"
+                    >
+                      Contacter
+                    </button>
+                  }
                   @if (member.role === 'STAFF') {
                     <button
                       (click)="onDeleteClick(member.id!)"
@@ -135,6 +146,8 @@ import { ConfirmModalComponent } from '../../../../shared/components/confirm-mod
 })
 export class StaffListComponent implements OnInit {
   private userService = inject(UsersService);
+  private chatService = inject(ChatService);
+  private router = inject(Router);
   authService = inject(AuthService);
 
   team = signal<Partial<User>[]>([]);
@@ -187,6 +200,12 @@ export class StaffListComponent implements OnInit {
 
   onDeleteClick(id: string) {
     this.staffIdToDelete.set(id);
+  }
+
+  onContactMember(userId: string) {
+    this.chatService.createConversation(userId).subscribe((conv) => {
+      this.router.navigate(['/admin/messages'], { queryParams: { id: conv.id } });
+    });
   }
 
   handleDelete() {

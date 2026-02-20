@@ -70,6 +70,10 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/admin/events/event-create/event-create.component').then((m) => m.EventCreateComponent),
       },
+      {
+        path: 'messages',
+        loadComponent: () => import('./features/alumni/chat/chat.component').then((m) => m.AlumniChatComponent),
+      },
     ],
   },
 
@@ -98,6 +102,10 @@ export const routes: Routes = [
         path: 'directory',
         loadComponent: () =>
           import('./features/alumni/directory/directory.component').then((m) => m.AlumniDirectoryComponent),
+      },
+      {
+        path: 'chat',
+        loadComponent: () => import('./features/alumni/chat/chat.component').then((m) => m.AlumniChatComponent),
       },
     ],
   },

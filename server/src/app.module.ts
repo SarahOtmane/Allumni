@@ -11,6 +11,7 @@ import { EventsModule } from './modules/events/events.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { MailModule } from './modules/mail/mail.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { getDatabaseConfig } from './config/database.config';
 
 @Module({
@@ -32,6 +33,7 @@ import { getDatabaseConfig } from './config/database.config';
     ChatModule,
     MailModule,
     AdminModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

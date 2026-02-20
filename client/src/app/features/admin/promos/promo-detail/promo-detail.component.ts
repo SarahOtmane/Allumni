@@ -6,6 +6,8 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { CsvInstructionsModalComponent } from '../../../../shared/components/csv-instructions-modal/csv-instructions-modal.component';
 import { AlumniEditModalComponent } from '../alumni-edit-modal/alumni-edit-modal.component';
 import { ConfirmModalComponent } from '../../../../shared/components/confirm-modal/confirm-modal.component';
+import { ChatService } from '../../../../core/services/chat.service';
+import { Router } from '@angular/router';
 
 export interface ImportSummary {
   success: number;
@@ -150,6 +152,20 @@ export interface ImportSummary {
                     </span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button
+                      (click)="onContactAlumni(alumnus.user_id)"
+                      class="text-indigo-600 hover:text-indigo-900 mr-3"
+                      title="Contacter"
+                    >
+                      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                        />
+                      </svg>
+                    </button>
                     @if (authService.currentUser()?.role === 'ADMIN') {
                       <button
                         (click)="onEditAlumnus(alumnus)"
@@ -223,6 +239,8 @@ export interface ImportSummary {
 export class PromoDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private alumniService = inject(AlumniService);
+  private chatService = inject(ChatService);
+  private router = inject(Router);
   authService = inject(AuthService);
 
   year = signal<number>(0);
@@ -256,6 +274,12 @@ export class PromoDetailComponent implements OnInit {
 
   onEditAlumnus(alumnus: Alumni) {
     this.selectedAlumnus.set(alumnus);
+  }
+
+  onContactAlumni(userId: string) {
+    this.chatService.createConversation(userId).subscribe((conv) => {
+      this.router.navigate(['/admin/messages'], { queryParams: { id: conv.id } });
+    });
   }
 
   onAlumnusSaved() {

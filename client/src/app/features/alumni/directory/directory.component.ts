@@ -4,6 +4,8 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { AlumniService, Promotion, Alumni } from '../../../core/services/alumni.service';
 import { DirectoryLoadingComponent } from './directory.loading';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { ChatService } from '../../../core/services/chat.service';
+import { Router } from '@angular/router';
 
 @Component({
   standalone: true,
@@ -68,18 +70,37 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           @for (alumnus of alumni(); track alumnus.id) {
             <div
-              class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4 hover:shadow-md transition-all"
+              class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col hover:shadow-md transition-all group"
             >
-              <div
-                class="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-lg shrink-0"
-              >
-                {{ alumnus.first_name[0] }}{{ alumnus.last_name[0] }}
+              <div class="flex items-center space-x-4 mb-4">
+                <div
+                  class="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-lg shrink-0"
+                >
+                  {{ alumnus.first_name[0] }}{{ alumnus.last_name[0] }}
+                </div>
+                <div class="min-w-0">
+                  <h3 class="font-bold text-gray-900 truncate">{{ alumnus.first_name }} {{ alumnus.last_name }}</h3>
+                  <p class="text-sm text-indigo-600 font-medium truncate">
+                    {{ alumnus.current_position || 'Poste non renseigné' }}
+                  </p>
+                </div>
               </div>
-              <div class="min-w-0">
-                <h3 class="font-bold text-gray-900 truncate">{{ alumnus.first_name }} {{ alumnus.last_name }}</h3>
-                <p class="text-sm text-indigo-600 font-medium truncate">
-                  {{ alumnus.current_position || 'Poste non renseigné' }}
-                </p>
+
+              <div class="mt-auto pt-4 border-t border-gray-50">
+                <button
+                  (click)="contactAlumni(alumnus.user_id)"
+                  class="w-full py-2 px-4 bg-indigo-50 text-indigo-700 text-sm font-bold rounded-lg hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center"
+                >
+                  <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
+                  </svg>
+                  Contacter
+                </button>
               </div>
             </div>
           } @empty {
@@ -94,6 +115,8 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 })
 export class AlumniDirectoryComponent implements OnInit {
   private alumniService = inject(AlumniService);
+  private chatService = inject(ChatService);
+  private router = inject(Router);
 
   promos = signal<Promotion[]>([]);
   alumni = signal<Alumni[]>([]);
@@ -144,6 +167,13 @@ export class AlumniDirectoryComponent implements OnInit {
       error: () => {
         this.isLoading.set(false);
       },
+    });
+  }
+
+  contactAlumni(userId: string | undefined) {
+    if (!userId) return;
+    this.chatService.createConversation(userId).subscribe((conv) => {
+      this.router.navigate(['/portal/chat'], { queryParams: { id: conv.id } });
     });
   }
 }
