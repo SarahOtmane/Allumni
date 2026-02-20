@@ -11,77 +11,37 @@ Ce document recense les services principaux de l'application Alumni.
 | **UsersService** | `users` | Gestion des comptes, Invitations Team |
 | **JobsService** | `jobs` | CRUD Offres d'emploi, Filtres |
 | **EventsService** | `events` | CRUD Événements, Inscriptions |
+| **ChatService** | `chat` | Gestion conversations & messages, WebSockets |
+| **NotificationService** | `notifications` | Système d'alertes en temps réel |
 | **MailService** | `mail` | Envoi d'emails (Nodemailer/Handlebars) |
 | **AdminService** | `admin` | Agrégation des KPIs pour le dashboard |
-| **ScrapingService** | `scraping` | (En attente) Orchestration du scraping LinkedIn |
+| **ScrapingService** | `scraping` | (Phase 5) Orchestration du scraping LinkedIn |
 
-### Focus : Le Service de Scraping (Asynchrone)
+### Focus : Messagerie & Notifications (WebSockets)
 
-Le scraping est découplé en deux parties : le *Producer* (API) et le *Consumer* (Worker).
+L'application utilise Socket.io pour les fonctionnalités temps réel.
 
-**A. Producer (Ajout à la file)**
+**A. ChatGateway (Namespace: `default`)**
+- Gère le broadcast des messages dans les rooms de conversation.
+- Sécurisé par JWT lors du handshake.
 
-```typescript
-// server/src/modules/scraping/scraping.service.ts
-import { Injectable } from '@nestjs/common';
-import { InjectQueue } from '@nestjs/bull';
-import { Queue } from 'bull';
+**B. NotificationsGateway (Namespace: `notifications`)**
+- Notifie les utilisateurs des nouveaux messages, jobs ou events.
+- Utilise une room par utilisateur (`user_{userId}`).
 
-@Injectable()
-export class ScrapingService {
-  constructor(@InjectQueue('linkedin-scraping') private scrapingQueue: Queue) {}
-
-  async addToQueue(alumniData: CreateAlumniDto) {
-    await this.scrapingQueue.add('enrich-profile', alumniData, {
-      attempts: 3,
-      backoff: 5000, // Attendre 5s avant de réessayer
-      removeOnComplete: true,
-    });
-  }
-}
-```
-
-**B. Consumer (Traitement Worker)**
-
-```typescript
-// server/src/modules/scraping/scraping.processor.ts
-import { Injectable } from '@nestjs/common';
-import { Process, Processor } from '@nestjs/bull';
-import { Job } from 'bull';
-import puppeteer from 'puppeteer';
-
-@Processor('linkedin-scraping')
-export class ScrapingProcessor {
-  @Process('enrich-profile')
-  async handleScraping(job: Job) {
-    const { linkedinUrl } = job.data;
-
-    const browser = await puppeteer.launch({ headless: 'new' });
-    const page = await browser.newPage();
-
-    try {
-      await page.goto(linkedinUrl, { waitUntil: 'networkidle2' });
-      // ... Logique d'extraction DOM ...
-      return { position: 'Développeur', company: 'Tech Corp' };
-    } catch (error) {
-      // Profil privé, URL invalide → le job sera retry automatiquement
-      throw error;
-    } finally {
-      await browser.close();
-    }
-  }
-}
-```
+---
 
 ## 2. Frontend Services (Angular)
 
-Les services Angular sont des Singletons (`providedIn: 'root'`) qui communiquent avec l'API NestJS via `HttpClient`.
+Les services Angular sont des Singletons (`providedIn: 'root'`) qui communiquent avec l'API NestJS via `HttpClient` ou WebSockets.
 
 | Service | Usage | Endpoint Base |
 |---------|-------|---------------|
 | **AuthService** | Login, Logout, état utilisateur (Signal) | `/api/auth` |
 | **AlumniService** | Récupération annuaire, Profil | `/api/alumni` |
-| **AdminService** | Upload CSV, Trigger Scraping, Stats | `/api/admin` |
+| **ChatService** | Messagerie, connexion WebSocket | `/api/chat` |
+| **NotificationService** | Gestion des alertes, WebSocket | `/api/notifications` |
+| **AdminService** | Upload CSV, Stats | `/api/admin` |
 
 ### Pattern Service Angular (Signal + HttpClient)
 
