@@ -28,6 +28,7 @@
 - [x] CRUD Admin pour Alumni, Staff, Jobs et Events
 - [x] Logique d'import CSV pour les alumni
 - [x] Endpoints statistiques pour le dashboard
+- [x] Création du PRP pour les tests unitaires backend (`PRPs/backend-unit-tests.md`)
 
 ### Frontend (Angular)
 - [x] Layouts globaux (Admin & Alumni) avec Header dynamique et Sidebar
