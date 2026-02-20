@@ -89,10 +89,10 @@ describe('AlumniService', () => {
 
   describe('update', () => {
     it('should update profile and user email within a transaction', async () => {
-      const mockProfile = { 
-        id: '1', 
-        user_id: 'u1', 
-        update: jest.fn().mockResolvedValue(true) 
+      const mockProfile = {
+        id: '1',
+        user_id: 'u1',
+        update: jest.fn().mockResolvedValue(true),
       };
       alumniModel.findByPk.mockResolvedValue(mockProfile);
 
@@ -101,17 +101,17 @@ describe('AlumniService', () => {
       expect(mockSequelize.transaction).toHaveBeenCalled();
       expect(userModel.update).toHaveBeenCalledWith(
         { email: 'jane@test.com' },
-        { where: { id: 'u1' }, transaction: mockTransaction }
+        { where: { id: 'u1' }, transaction: mockTransaction },
       );
       expect(mockProfile.update).toHaveBeenCalled();
       expect(mockTransaction.commit).toHaveBeenCalled();
     });
 
     it('should rollback transaction on error', async () => {
-      const mockProfile = { 
-        id: '1', 
-        user_id: 'u1', 
-        update: jest.fn().mockRejectedValue(new Error('Update failed')) 
+      const mockProfile = {
+        id: '1',
+        user_id: 'u1',
+        update: jest.fn().mockRejectedValue(new Error('Update failed')),
       };
       alumniModel.findByPk.mockResolvedValue(mockProfile);
 
@@ -122,19 +122,19 @@ describe('AlumniService', () => {
 
   describe('remove', () => {
     it('should delete profile and associated user', async () => {
-      const mockProfile = { 
-        id: '1', 
-        user_id: 'u1', 
-        destroy: jest.fn().mockResolvedValue(true) 
+      const mockProfile = {
+        id: '1',
+        user_id: 'u1',
+        destroy: jest.fn().mockResolvedValue(true),
       };
       alumniModel.findByPk.mockResolvedValue(mockProfile);
 
       await service.remove('1');
 
       expect(mockProfile.destroy).toHaveBeenCalledWith({ transaction: mockTransaction });
-      expect(userModel.destroy).toHaveBeenCalledWith({ 
-        where: { id: 'u1' }, 
-        transaction: mockTransaction 
+      expect(userModel.destroy).toHaveBeenCalledWith({
+        where: { id: 'u1' },
+        transaction: mockTransaction,
       });
       expect(mockTransaction.commit).toHaveBeenCalled();
     });
