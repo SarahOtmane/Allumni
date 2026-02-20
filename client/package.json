@@ -48,5 +48,11 @@
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3",
     "typescript": "~5.4.2"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-musl": "4.57.1",
+    "@rollup/rollup-linux-x64-gnu": "4.57.1",
+    "@rollup/rollup-linux-arm64-musl": "4.57.1",
+    "@rollup/rollup-linux-arm64-gnu": "4.57.1"
   }
 }
