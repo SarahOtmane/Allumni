@@ -74,6 +74,8 @@ jobs:
         run: |
           docker-compose logs server
           docker-compose logs client
+          docker-compose exec -T server npm list @nestjs/common @nestjs/core @nestjs/platform-express
+          docker-compose exec -T client npm list rollup
 
       - name: Arrêter les containers
         if: always()
