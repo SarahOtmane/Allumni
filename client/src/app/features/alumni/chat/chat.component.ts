@@ -47,7 +47,7 @@ import { ChatLoadingComponent } from './chat.loading';
                   <h3 class="font-bold text-gray-900 truncate">{{ getOtherParticipant(conv)?.email }}</h3>
                 </div>
                 <p class="text-sm text-gray-500 truncate">
-                  {{ conv.messages?.[0]?.content || 'Pas encore de messages' }}
+                  {{ conv.messages[0]?.content || 'Pas encore de messages' }}
                 </p>
               </div>
             </button>
