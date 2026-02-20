@@ -40,7 +40,7 @@ export class AlumniController {
   @Get('promos/:year')
   @Roles('ADMIN', 'STAFF', 'ALUMNI')
   findByYear(@Param('year', ParseIntPipe) year: number, @Request() req, @Query('search') search?: string) {
-    return this.alumniService.findByYear(year, req.user.role, search);
+    return this.alumniService.findByYear(year, req.user.role, search, req.user.id);
   }
 
   @Patch(':id')
