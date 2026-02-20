@@ -66,6 +66,7 @@
 - [x] PRP Créé : `PRPs/admin-messaging.md`
 - [x] Messagerie instantanée entre Alumni (temps réel)
 - [x] Messagerie Admin/Staff vers tous les utilisateurs
+- [x] Système de notifications temps réel (Messages, Jobs, Events)
 - [ ] Système de notifications (Email/In-app pour nouvelles offres ou events)
 
 ### Phase 7 — Finalisation & Déploiement

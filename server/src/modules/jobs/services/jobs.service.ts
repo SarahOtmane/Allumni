@@ -5,19 +5,31 @@ import { CreateJobDto } from '../dto/create-job.dto';
 import { UpdateJobDto } from '../dto/update-job.dto';
 import { User } from '../../users/models/user.model';
 import { Op } from 'sequelize';
+import { NotificationsService } from '../../notifications/services/notifications.service';
+import { NotificationType } from '../../notifications/models/notification.model';
 
 @Injectable()
 export class JobsService {
   constructor(
     @InjectModel(JobOffer)
     private jobOfferModel: typeof JobOffer,
+    private notificationsService: NotificationsService,
   ) {}
 
   async create(createJobDto: CreateJobDto, authorId: string) {
-    return this.jobOfferModel.create({
+    const job = await this.jobOfferModel.create({
       ...createJobDto,
       author_id: authorId,
     });
+
+    await this.notificationsService.notifyAllAlumni(
+      NotificationType.JOB,
+      "Nouvelle offre d'emploi",
+      `${job.company} recrute : ${job.title}`,
+      job.id,
+    );
+
+    return job;
   }
 
   async findAll(filters?: { title?: string; location?: string; sort?: 'ASC' | 'DESC' }) {

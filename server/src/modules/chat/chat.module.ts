@@ -9,6 +9,7 @@ import { ChatService } from './services/chat.service';
 import { ChatController } from './controllers/chat.controller';
 import { ChatGateway } from './chat.gateway';
 import { User } from '../users/models/user.model';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { User } from '../users/models/user.model';
       }),
       inject: [ConfigService],
     }),
+    NotificationsModule,
   ],
   controllers: [ChatController],
   providers: [ChatService, ChatGateway],
