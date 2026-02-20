@@ -48,11 +48,13 @@ alumni-platform/
 │       │   ├── auth/
 │       │   ├── users/
 │       │   ├── alumni/
+│       │   ├── admin/
 │       │   ├── jobs/
 │       │   ├── events/
 │       │   ├── mail/
 │       │   ├── chat/
-│       │   └── scraping/
+│       │   ├── notifications/
+│       │   └── scraping/          # (Phase 5) LinkedIn Scraping
 │       ├── common/                # Decorators, DTOs, Filters
 │       └── config/
 ├── nginx/                         # Config Nginx
