@@ -67,7 +67,9 @@ jobs:
         run: docker-compose exec -T client npm run lint
 
       - name: Lancer les tests unitaires - Client
-        run: docker-compose exec -T client npm run test -- --watch=false --browsers=ChromeHeadless
+        run: docker-compose exec -T client npm run test -- --watch=false --browsers=ChromeHeadlessCI
+        env:
+          CHROME_BIN: /usr/bin/chromium-browser
 
       - name: Afficher les logs en cas d'échec
         if: failure()
