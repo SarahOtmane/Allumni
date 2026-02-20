@@ -235,7 +235,7 @@ export class AlumniChatComponent implements OnInit, OnDestroy, AfterViewChecked 
       error: () => {
         // Optional: Show error to user or restore content
         console.error('Failed to send message');
-      }
+      },
     });
   }
 
