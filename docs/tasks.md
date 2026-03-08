@@ -22,6 +22,7 @@
 - [x] Méthodologie PRP (`concept_library/cc_PRP_flow/`)
 - [x] Commandes Gemini CLI (`.gemini/commands/`)
 - [x] PRP d'initialisation créé (`PRPs/00-initialization.md`)
+- [x] PRP Créé : `PRPs/linkedin-scraping-enrichment.md` (LinkedIn Scraping & Enrichment)
 - [x] **Exécution du PRP d'initialisation** :
     - [x] Initialisation du monorepo (structure de dossiers `client/`, `server/`)
     - [x] `docker-compose.yml` principal (mysql, redis, server, client, nginx)
