@@ -8,6 +8,8 @@ import { UpdateAlumniDto } from '../dto/update-alumni.dto';
 import * as csv from 'csv-parser';
 import { Readable } from 'stream';
 import { Op } from 'sequelize';
+import { ScrapingService } from '../../scraping/services/scraping.service';
+import { AlumniExperience } from '../models/alumni-experience.model';
 
 @Injectable()
 export class AlumniService {
@@ -19,6 +21,7 @@ export class AlumniService {
     @InjectModel(User)
     private userModel: typeof User,
     private sequelize: Sequelize,
+    private scrapingService: ScrapingService,
   ) {}
 
   async findAllPromos() {
@@ -49,14 +52,19 @@ export class AlumniService {
     return this.alumniProfileModel.findAll({
       where,
       attributes: isAlumni ? ['id', 'user_id', 'first_name', 'last_name', 'current_position', 'promo_year'] : undefined,
-      include: isAlumni ? [] : [{ model: User, attributes: ['id', 'email', 'is_active'] }],
+      include: isAlumni
+        ? []
+        : [
+            { model: User, attributes: ['id', 'email', 'is_active'] },
+            { model: AlumniExperience },
+          ],
       order: [['last_name', 'ASC']],
     });
   }
 
   async findOne(id: string) {
     const profile = await this.alumniProfileModel.findByPk(id, {
-      include: [User],
+      include: [User, AlumniExperience],
     });
     if (!profile) {
       throw new NotFoundException(`Profil Alumni avec l'ID ${id} non trouvé`);
@@ -115,6 +123,7 @@ export class AlumniService {
         .on('data', (data) => results.push(data))
         .on('end', async () => {
           const transaction = await this.sequelize.transaction();
+          const alumniToScrape = [];
           try {
             const summary = {
               success: 0,
@@ -123,14 +132,12 @@ export class AlumniService {
             };
 
             for (const row of results) {
-              const {
-                Nom,
-                Prénom,
-                Email,
-                'URL Linkedin': linkedin,
-                'Année de diplôme': graduationYear,
-                'Quel diplôme': diploma,
-              } = row;
+              const Nom = row['Nom']?.trim();
+              const Prénom = row['Prénom']?.trim();
+              const Email = row['Email']?.trim();
+              const linkedin = row['URL Linkedin']?.trim();
+              const graduationYear = row['Année de diplôme']?.trim();
+              const diploma = row['Quel diplôme']?.trim();
 
               // Validation: Year match
               if (parseInt(graduationYear) !== year) {
@@ -142,7 +149,7 @@ export class AlumniService {
               }
 
               try {
-                // Create User
+                // Create or Find User
                 const [user, created] = await this.userModel.findOrCreate({
                   where: { email: Email },
                   defaults: {
@@ -152,24 +159,57 @@ export class AlumniService {
                   transaction,
                 });
 
+                let profile;
                 if (!created) {
-                  summary.failed++;
-                  summary.errorDetails.push(`Ligne sautée: L'email ${Email} existe déjà.`);
-                  continue;
+                  // Update existing profile if it exists
+                  profile = await this.alumniProfileModel.findOne({
+                    where: { user_id: user.id },
+                    transaction,
+                  });
+
+                  if (profile) {
+                    await profile.update(
+                      {
+                        first_name: Prénom,
+                        last_name: Nom,
+                        promo_year: year,
+                        diploma: diploma,
+                        linkedin_url: linkedin,
+                      },
+                      { transaction },
+                    );
+                  } else {
+                    // This shouldn't normally happen if the user is an ALUMNI, but let's be safe
+                    profile = await this.alumniProfileModel.create(
+                      {
+                        user_id: user.id,
+                        first_name: Prénom,
+                        last_name: Nom,
+                        promo_year: year,
+                        diploma: diploma,
+                        linkedin_url: linkedin,
+                      },
+                      { transaction },
+                    );
+                  }
+                } else {
+                  // Create Profile for new user
+                  profile = await this.alumniProfileModel.create(
+                    {
+                      user_id: user.id,
+                      first_name: Prénom,
+                      last_name: Nom,
+                      promo_year: year,
+                      diploma: diploma,
+                      linkedin_url: linkedin,
+                    },
+                    { transaction },
+                  );
                 }
 
-                // Create Profile
-                await this.alumniProfileModel.create(
-                  {
-                    user_id: user.id,
-                    first_name: Prénom,
-                    last_name: Nom,
-                    promo_year: year,
-                    diploma: diploma,
-                    linkedin_url: linkedin,
-                  },
-                  { transaction },
-                );
+                if (linkedin) {
+                  alumniToScrape.push({ id: profile.id, url: linkedin });
+                }
 
                 summary.success++;
               } catch (err) {
@@ -179,6 +219,12 @@ export class AlumniService {
             }
 
             await transaction.commit();
+
+            // Trigger scraping jobs after transaction commit
+            for (const item of alumniToScrape) {
+              await this.scrapingService.addScrapingJob(item.id, item.url);
+            }
+
             resolve(summary);
           } catch (error) {
             await transaction.rollback();
