@@ -1,13 +1,15 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AlumniService, Alumni } from '../../../../core/services/alumni.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { CsvInstructionsModalComponent } from '../../../../shared/components/csv-instructions-modal/csv-instructions-modal.component';
 import { AlumniEditModalComponent } from '../alumni-edit-modal/alumni-edit-modal.component';
+import { AlumniDetailModalComponent } from '../alumni-detail-modal/alumni-detail-modal.component';
 import { ConfirmModalComponent } from '../../../../shared/components/confirm-modal/confirm-modal.component';
 import { ChatService } from '../../../../core/services/chat.service';
 import { Router } from '@angular/router';
+import { interval, Subscription } from 'rxjs';
 
 export interface ImportSummary {
   success: number;
@@ -17,7 +19,14 @@ export interface ImportSummary {
 
 @Component({
   standalone: true,
-  imports: [CommonModule, RouterLink, CsvInstructionsModalComponent, AlumniEditModalComponent, ConfirmModalComponent],
+  imports: [
+    CommonModule,
+    RouterLink,
+    CsvInstructionsModalComponent,
+    AlumniEditModalComponent,
+    AlumniDetailModalComponent,
+    ConfirmModalComponent,
+  ],
   template: `
     <div class="p-6">
       <header class="mb-8 flex justify-between items-center">
@@ -84,7 +93,7 @@ export interface ImportSummary {
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Poste / Entreprise
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Enrichi</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Scraping</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
                 <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
@@ -116,22 +125,52 @@ export interface ImportSummary {
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ alumnus.diploma }}</td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm">
-                    @if (alumnus.current_position || alumnus.company) {
+                    @if (alumnus.scraping_status === 'COMPLETED' || alumnus.current_position || alumnus.company) {
                       <div class="text-gray-900 font-medium">{{ alumnus.current_position || '-' }}</div>
                       <div class="text-xs text-gray-500">{{ alumnus.company || '-' }}</div>
+                    } @else if (alumnus.scraping_status === 'FAILED') {
+                      <span class="text-red-400 italic text-xs" [title]="alumnus.scraping_error">Échec du scraping</span>
                     } @else {
-                      <span class="text-gray-300 italic text-xs">En attente de scraping</span>
+                      <span class="text-gray-300 italic text-xs">En attente...</span>
                     }
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
-                    @if (alumnus.data_enriched) {
-                      <span class="text-green-500" title="Données enrichies">
+                    @if (alumnus.scraping_status === 'COMPLETED') {
+                      <div class="flex flex-col items-center">
+                        <span class="text-green-500" title="Données enrichies">
+                          <svg class="h-5 w-5 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </span>
+                        <button (click)="onRetryScrape(alumnus.id)" class="text-[10px] text-gray-400 hover:text-indigo-600 mt-1">Refaire</button>
+                      </div>
+                    } @else if (alumnus.scraping_status === 'PROCESSING') {
+                      <span class="text-indigo-500 animate-spin" title="Scraping en cours">
                         <svg class="h-5 w-5 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                          />
                         </svg>
                       </span>
+                    } @else if (alumnus.scraping_status === 'FAILED') {
+                      <div class="flex flex-col items-center">
+                        <span class="text-red-500" [title]="alumnus.scraping_error">
+                          <svg class="h-5 w-5 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                        </span>
+                        <button (click)="onRetryScrape(alumnus.id)" class="text-[10px] text-indigo-600 hover:underline mt-1">Réessayer</button>
+                      </div>
                     } @else {
-                      <span class="text-yellow-500 animate-pulse" title="Scraping en cours ou à venir">
+                      <span class="text-yellow-500 animate-pulse" title="En attente">
                         <svg class="h-5 w-5 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path
                             stroke-linecap="round"
@@ -152,6 +191,15 @@ export interface ImportSummary {
                     </span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button
+                      (click)="onViewDetail(alumnus)"
+                      class="text-indigo-600 hover:text-indigo-900 mr-3"
+                      title="Détails"
+                    >
+                      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01m-.01 4h.01" />
+                      </svg>
+                    </button>
                     <button
                       (click)="onContactAlumni(alumnus.user_id)"
                       class="text-indigo-600 hover:text-indigo-900 mr-3"
@@ -225,6 +273,13 @@ export interface ImportSummary {
       />
     }
 
+    @if (selectedAlumnusForDetail()) {
+      <app-alumni-detail-modal
+        [alumnus]="selectedAlumnusForDetail()!"
+        (closed)="selectedAlumnusForDetail.set(null)"
+      />
+    }
+
     @if (alumnusIdToDelete()) {
       <app-confirm-modal
         title="Supprimer l'étudiant"
@@ -236,7 +291,7 @@ export interface ImportSummary {
     }
   `,
 })
-export class PromoDetailComponent implements OnInit {
+export class PromoDetailComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private alumniService = inject(AlumniService);
   private chatService = inject(ChatService);
@@ -248,17 +303,38 @@ export class PromoDetailComponent implements OnInit {
   showImportModal = signal(false);
   importSummary = signal<ImportSummary | null>(null);
   selectedAlumnus = signal<Alumni | null>(null);
+  selectedAlumnusForDetail = signal<Alumni | null>(null);
   alumnusIdToDelete = signal<string | null>(null);
+
+  private refreshSubscription?: Subscription;
 
   ngOnInit() {
     this.route.params.subscribe((params) => {
       this.year.set(+params['year']);
       this.loadAlumni();
     });
+
+    // Auto-refresh every 5 seconds if any alumnus is being processed
+    this.refreshSubscription = interval(5000).subscribe(() => {
+      if (this.alumni().some((a) => a.scraping_status === 'PROCESSING' || a.scraping_status === 'PENDING')) {
+        this.loadAlumni();
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    this.refreshSubscription?.unsubscribe();
   }
 
   loadAlumni() {
     this.alumniService.getAlumniByYear(this.year()).subscribe((data) => this.alumni.set(data));
+  }
+
+  onRetryScrape(id: string) {
+    this.alumniService.triggerScraping(id).subscribe({
+      next: () => this.loadAlumni(),
+      error: (err) => alert('Erreur lors de la relance : ' + (err.error?.message || 'Inconnue')),
+    });
   }
 
   onFileUploaded(file: File) {
@@ -274,6 +350,10 @@ export class PromoDetailComponent implements OnInit {
 
   onEditAlumnus(alumnus: Alumni) {
     this.selectedAlumnus.set(alumnus);
+  }
+
+  onViewDetail(alumnus: Alumni) {
+    this.selectedAlumnusForDetail.set(alumnus);
   }
 
   onContactAlumni(userId: string) {
