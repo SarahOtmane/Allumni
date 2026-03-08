@@ -101,6 +101,9 @@ docker compose up mysql_db
 
 # Rebuild complet (après modification d'un Dockerfile)
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+
+#creer les tables
+docker compose exec server npx sequelize-cli db:migrate
 ```
 
 ### Arrêt & Nettoyage
