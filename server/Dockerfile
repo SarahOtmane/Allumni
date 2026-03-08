@@ -3,19 +3,25 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Copy root package.json and lock file first for monorepo context
+# Install Chromium for Puppeteer (needed for scraping)
+RUN apk add --no-cache chromium nss freetype harfbuzz ca-certificates ttf-freefont
+
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
+# Copy root package files
 COPY package.json package-lock.json ./
 
-# Copy server specific package.json and lock file
-COPY server/package.json server/package-lock.json ./server/
+# Copy server specific package.json ONLY
+COPY server/package.json ./server/
 
-# Install all dependencies (for both root and workspaces)
+# Install dependencies
 RUN npm install
 
-# Copy the rest of the source code
+# Copy source code
 COPY . .
 
-# Build the NestJS application (assuming it's in the 'server' directory)
+# Build the NestJS application
 WORKDIR /app/server
 RUN npm run build
 
@@ -24,21 +30,23 @@ FROM node:18-alpine AS runner
 
 WORKDIR /app
 
-# Copy root package.json and lock file for runtime
+# Install Chromium in runner too
+RUN apk add --no-cache chromium nss freetype harfbuzz ca-certificates ttf-freefont
+
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
+# Copy root and server package files
 COPY package.json package-lock.json ./
+COPY server/package.json ./server/
 
-# Copy server specific package.json and lock file for runtime
-COPY server/package.json server/package-lock.json ./server/
-
-# Install only production dependencies for all workspaces
+# Install production dependencies
 RUN npm install --only=production
 
-# Copy the built application from the builder stage
+# Copy built app
 COPY --from=builder /app/server/dist ./server/dist
 COPY --from=builder /app/server/.env ./server/.env
 
-# Expose the port the NestJS app listens on
 EXPOSE 3000
 
-# Command to run the NestJS application
 CMD ["node", "server/dist/main"]
