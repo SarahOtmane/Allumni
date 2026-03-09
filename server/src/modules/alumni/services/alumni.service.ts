@@ -7,9 +7,22 @@ import { Sequelize } from 'sequelize-typescript';
 import { UpdateAlumniDto } from '../dto/update-alumni.dto';
 import * as csv from 'csv-parser';
 import { Readable } from 'stream';
-import { Op } from 'sequelize';
+import { Op, WhereOptions } from 'sequelize';
 import { ScrapingService } from '../../scraping/services/scraping.service';
 import { AlumniExperience } from '../models/alumni-experience.model';
+
+interface ProfileYear {
+  promo_year: number;
+}
+
+interface CsvRow {
+  Nom: string;
+  Prénom: string;
+  Email: string;
+  'URL Linkedin': string;
+  'Année de diplôme': string;
+  'Quel diplôme': string;
+}
 
 @Injectable()
 export class AlumniService {
@@ -26,12 +39,12 @@ export class AlumniService {
 
   async findAllPromos() {
     // Synchronisation automatique : récupérer toutes les années uniques présentes chez les alumni
-    const yearsInProfiles = await this.alumniProfileModel.findAll({
+    const yearsInProfiles = (await this.alumniProfileModel.findAll({
       attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('promo_year')), 'promo_year']],
       raw: true,
-    });
+    })) as unknown as ProfileYear[];
 
-    for (const profile of yearsInProfiles as any[]) {
+    for (const profile of yearsInProfiles) {
       const year = profile.promo_year;
       if (year) {
         await this.promotionModel.findOrCreate({
@@ -50,14 +63,14 @@ export class AlumniService {
   async findByYear(year: number, userRole?: string, search?: string, currentUserId?: string) {
     const isAlumni = userRole === 'ALUMNI';
 
-    const where: any = { promo_year: year };
+    const where: WhereOptions = { promo_year: year };
 
     if (isAlumni && currentUserId) {
       where.user_id = { [Op.ne]: currentUserId };
     }
 
     if (search) {
-      where[Op.or] = [
+      where[Op.or as any] = [
         { first_name: { [Op.like]: `%${search}%` } },
         { last_name: { [Op.like]: `%${search}%` } },
         { current_position: { [Op.like]: `%${search}%` } },
@@ -67,12 +80,7 @@ export class AlumniService {
     return this.alumniProfileModel.findAll({
       where,
       attributes: isAlumni ? ['id', 'user_id', 'first_name', 'last_name', 'current_position', 'promo_year'] : undefined,
-      include: isAlumni
-        ? []
-        : [
-            { model: User, attributes: ['id', 'email', 'is_active'] },
-            { model: AlumniExperience },
-          ],
+      include: isAlumni ? [] : [{ model: User, attributes: ['id', 'email', 'is_active'] }, { model: AlumniExperience }],
       order: [['last_name', 'ASC']],
     });
   }
@@ -129,21 +137,21 @@ export class AlumniService {
   }
 
   async importCsv(year: number, fileBuffer: Buffer) {
-    const results = [];
+    const results: CsvRow[] = [];
     const stream = Readable.from(fileBuffer);
 
     return new Promise((resolve, reject) => {
       stream
         .pipe(csv())
-        .on('data', (data) => results.push(data))
+        .on('data', (data: CsvRow) => results.push(data))
         .on('end', async () => {
           const transaction = await this.sequelize.transaction();
-          const alumniToScrape = [];
+          const alumniToScrape: { id: string; url: string }[] = [];
           try {
             const summary = {
               success: 0,
               failed: 0,
-              errorDetails: [],
+              errorDetails: [] as string[],
             };
 
             for (const row of results) {
@@ -176,16 +184,16 @@ export class AlumniService {
                   transaction,
                 });
 
-                let profile;
+                let profile: AlumniProfile;
                 if (!created) {
                   // Update existing profile if it exists
-                  profile = await this.alumniProfileModel.findOne({
+                  const existingProfile = await this.alumniProfileModel.findOne({
                     where: { user_id: user.id },
                     transaction,
                   });
 
-                  if (profile) {
-                    await profile.update(
+                  if (existingProfile) {
+                    profile = await existingProfile.update(
                       {
                         first_name: Prénom,
                         last_name: Nom,
