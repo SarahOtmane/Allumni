@@ -8,7 +8,10 @@ import { Alumni } from '../../../../core/services/alumni.service';
   standalone: true,
   imports: [CommonModule, ModalComponent],
   template: `
-    <app-modal [title]="'Détails : ' + alumnus.first_name + ' ' + (alumnus.last_name | uppercase)" (closed)="closed.emit()">
+    <app-modal
+      [title]="'Détails : ' + alumnus.first_name + ' ' + (alumnus.last_name | uppercase)"
+      (closed)="closed.emit()"
+    >
       <div class="space-y-6">
         <!-- Informations de base -->
         <section>
@@ -29,10 +32,19 @@ import { Alumni } from '../../../../core/services/alumni.service';
             <div>
               <span class="text-gray-500 block">LinkedIn</span>
               @if (alumnus.linkedin_url) {
-                <a [href]="alumnus.linkedin_url" target="_blank" class="text-indigo-600 hover:underline flex items-center">
+                <a
+                  [href]="alumnus.linkedin_url"
+                  target="_blank"
+                  class="text-indigo-600 hover:underline flex items-center"
+                >
                   Profil Public
                   <svg class="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                    />
                   </svg>
                 </a>
               } @else {
@@ -62,10 +74,17 @@ import { Alumni } from '../../../../core/services/alumni.service';
                       }
                       <div class="relative flex space-x-3">
                         <div>
-                          <span class="h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white"
-                                [ngClass]="exp.is_current ? 'bg-indigo-500' : 'bg-gray-400'">
+                          <span
+                            class="h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white"
+                            [ngClass]="exp.is_current ? 'bg-indigo-500' : 'bg-gray-400'"
+                          >
                             <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                              />
                             </svg>
                           </span>
                         </div>
@@ -77,7 +96,8 @@ import { Alumni } from '../../../../core/services/alumni.service';
                             <p class="mt-0.5 text-sm text-gray-500">{{ exp.company }}</p>
                           </div>
                           <div class="mt-2 text-xs text-gray-400">
-                            {{ exp.start_date | date:'MMM yyyy' }} - {{ exp.is_current ? "Aujourd'hui" : (exp.end_date | date:'MMM yyyy') }}
+                            {{ exp.start_date | date: 'MMM yyyy' }} -
+                            {{ exp.is_current ? "Aujourd'hui" : (exp.end_date | date: 'MMM yyyy') }}
                           </div>
                         </div>
                       </div>

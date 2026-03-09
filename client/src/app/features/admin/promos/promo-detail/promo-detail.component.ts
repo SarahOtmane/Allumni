@@ -129,7 +129,9 @@ export interface ImportSummary {
                       <div class="text-gray-900 font-medium">{{ alumnus.current_position || '-' }}</div>
                       <div class="text-xs text-gray-500">{{ alumnus.company || '-' }}</div>
                     } @else if (alumnus.scraping_status === 'FAILED') {
-                      <span class="text-red-400 italic text-xs" [title]="alumnus.scraping_error">Échec du scraping</span>
+                      <span class="text-red-400 italic text-xs" [title]="alumnus.scraping_error"
+                        >Échec du scraping</span
+                      >
                     } @else {
                       <span class="text-gray-300 italic text-xs">En attente...</span>
                     }
@@ -142,7 +144,12 @@ export interface ImportSummary {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                           </svg>
                         </span>
-                        <button (click)="onRetryScrape(alumnus.id)" class="text-[10px] text-gray-400 hover:text-indigo-600 mt-1">Refaire</button>
+                        <button
+                          (click)="onRetryScrape(alumnus.id)"
+                          class="text-[10px] text-gray-400 hover:text-indigo-600 mt-1"
+                        >
+                          Refaire
+                        </button>
                       </div>
                     } @else if (alumnus.scraping_status === 'PROCESSING') {
                       <span class="text-indigo-500 animate-spin" title="Scraping en cours">
@@ -167,7 +174,12 @@ export interface ImportSummary {
                             />
                           </svg>
                         </span>
-                        <button (click)="onRetryScrape(alumnus.id)" class="text-[10px] text-indigo-600 hover:underline mt-1">Réessayer</button>
+                        <button
+                          (click)="onRetryScrape(alumnus.id)"
+                          class="text-[10px] text-indigo-600 hover:underline mt-1"
+                        >
+                          Réessayer
+                        </button>
                       </div>
                     } @else {
                       <span class="text-yellow-500 animate-pulse" title="En attente">
@@ -197,7 +209,12 @@ export interface ImportSummary {
                       title="Détails"
                     >
                       <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01m-.01 4h.01" />
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01m-.01 4h.01"
+                        />
                       </svg>
                     </button>
                     <button
@@ -274,10 +291,7 @@ export interface ImportSummary {
     }
 
     @if (selectedAlumnusForDetail()) {
-      <app-alumni-detail-modal
-        [alumnus]="selectedAlumnusForDetail()!"
-        (closed)="selectedAlumnusForDetail.set(null)"
-      />
+      <app-alumni-detail-modal [alumnus]="selectedAlumnusForDetail()!" (closed)="selectedAlumnusForDetail.set(null)" />
     }
 
     @if (alumnusIdToDelete()) {
@@ -317,7 +331,7 @@ export class PromoDetailComponent implements OnInit, OnDestroy {
     // Auto-refresh every 5 seconds if any alumnus is being processed or pending
     this.refreshSubscription = interval(5000).subscribe(() => {
       const needsRefresh = this.alumni().some(
-        (a) => a.scraping_status === 'PROCESSING' || a.scraping_status === 'PENDING'
+        (a) => a.scraping_status === 'PROCESSING' || a.scraping_status === 'PENDING',
       );
       if (needsRefresh) {
         this.loadAlumni();
