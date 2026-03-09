@@ -25,6 +25,21 @@ export class AlumniService {
   ) {}
 
   async findAllPromos() {
+    // Synchronisation automatique : récupérer toutes les années uniques présentes chez les alumni
+    const yearsInProfiles = await this.alumniProfileModel.findAll({
+      attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('promo_year')), 'promo_year']],
+      raw: true,
+    });
+
+    for (const profile of yearsInProfiles as any[]) {
+      const year = profile.promo_year;
+      if (year) {
+        await this.promotionModel.findOrCreate({
+          where: { year },
+        });
+      }
+    }
+
     return this.promotionModel.findAll({ order: [['year', 'DESC']] });
   }
 
@@ -136,14 +151,16 @@ export class AlumniService {
               const Prénom = row['Prénom']?.trim();
               const Email = row['Email']?.trim();
               const linkedin = row['URL Linkedin']?.trim();
-              const graduationYear = row['Année de diplôme']?.trim();
+              const graduationYearStr = row['Année de diplôme']?.trim();
               const diploma = row['Quel diplôme']?.trim();
 
-              // Validation: Year match
-              if (parseInt(graduationYear) !== year) {
+              const graduationYear = parseInt(graduationYearStr);
+
+              // Validation: L'année doit correspondre à la promotion cible
+              if (graduationYear !== year) {
                 summary.failed++;
                 summary.errorDetails.push(
-                  `Ligne sautée: L'année ${graduationYear} ne correspond pas à la promo ${year} (Email: ${Email})`,
+                  `Ligne sautée: L'année ${graduationYearStr} ne correspond pas à la promo cible ${year} (Email: ${Email})`,
                 );
                 continue;
               }
@@ -179,7 +196,6 @@ export class AlumniService {
                       { transaction },
                     );
                   } else {
-                    // This shouldn't normally happen if the user is an ALUMNI, but let's be safe
                     profile = await this.alumniProfileModel.create(
                       {
                         user_id: user.id,

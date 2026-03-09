@@ -2,9 +2,12 @@ import { Process, Processor } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bull';
 import { InjectModel } from '@nestjs/sequelize';
-import * as puppeteer from 'puppeteer';
 import { AlumniProfile } from '../../alumni/models/alumni-profile.model';
 import { AlumniExperience } from '../../alumni/models/alumni-experience.model';
+
+import puppeteer from 'puppeteer-extra';
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+puppeteer.use(StealthPlugin());
 
 @Processor('scraping')
 export class ScrapingProcessor {
@@ -15,190 +18,124 @@ export class ScrapingProcessor {
     private alumniProfileModel: typeof AlumniProfile,
     @InjectModel(AlumniExperience)
     private alumniExperienceModel: typeof AlumniExperience,
-  ) {
-    this.logger.log('ScrapingProcessor initialized and listening for jobs...');
-  }
+  ) {}
 
   @Process('extract-job-history')
   async handleScraping(job: Job<{ alumniId: string; linkedinUrl?: string }>) {
     const { alumniId, linkedinUrl } = job.data;
-    this.logger.log(`>> Worker picking up job for alumni: ${alumniId}`);
-
     const profile = await this.alumniProfileModel.findByPk(alumniId);
-    if (!profile) {
-      this.logger.error(`Profile ${alumniId} not found in DB!`);
-      return;
-    }
+    if (!profile) return;
 
     const url = linkedinUrl || profile.linkedin_url;
+    if (!url) return;
 
-    if (!url) {
-      this.logger.warn(`No LinkedIn URL for alumni ${alumniId}. Skipping.`);
-      return;
-    }
+    this.logger.log(`>> [TARGETED SCRAPE] alumni: ${profile.last_name}`);
+    await profile.update({ scraping_status: 'PROCESSING', scraping_error: null });
 
-    this.logger.log(`>> Starting extraction from LinkedIn for: ${alumniId}`);
-    await profile.update({ scraping_status: 'PROCESSING' });
-
+    const liAtCookie = process.env.LINKEDIN_LI_AT;
     let browser;
     try {
-      const launchOptions: any = {
+      browser = await (puppeteer as any).launch({
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-      };
-
-      if (process.env.PUPPETEER_EXECUTABLE_PATH) {
-        launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
-      }
-
-      try {
-        browser = await puppeteer.launch(launchOptions);
-      } catch (launchError) {
-        this.logger.warn(`>> Failed to launch with executablePath, trying default: ${launchError.message}`);
-        delete launchOptions.executablePath;
-        browser = await puppeteer.launch(launchOptions);
-      }
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium'
+      });
 
       const page = await browser.newPage();
-      await page.setUserAgent(
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
-      );
+      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
 
-      this.logger.log(`>> Navigating to ${url}`);
-      await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
+      let success = false;
 
-      // Extraction logic
-      const extractedData = await page.evaluate(() => {
-        const experienceSection =
-          document.querySelector('#experience') || document.querySelector('section.experience-section');
-        if (!experienceSection) return [];
-
-        const experienceItems = experienceSection.nextElementSibling?.querySelectorAll('li') ||
-          experienceSection.querySelectorAll('.experience-item');
-
-        const experiences = [];
-        experienceItems.forEach((item) => {
-          const titleElement = (item.querySelector('h3') || item.querySelector('.t-bold')) as HTMLElement;
-          const title = titleElement?.innerText.trim();
-
-          const companyElement = (item.querySelector('p.t-14.t-normal') ||
-            item.querySelector('.experience-item__subtitle')) as HTMLElement;
-          const company = companyElement?.innerText.split('·')[0].trim();
-
-          const dateRangeElement = (item.querySelector('.t-14.t-black--light.t-normal') ||
-            item.querySelector('.experience-item__duration')) as HTMLElement;
-          const dateRangeText = dateRangeElement?.innerText.trim(); // e.g., "Jan 2023 - Present"
-
-          if (title && company) {
-            experiences.push({ title, company, dateRangeText });
-          }
-        });
-
-        return experiences;
-      });
-
-      if (extractedData.length > 0) {
-        this.logger.log(`>> Extracted ${extractedData.length} experiences for ${alumniId}`);
-
-        // Clean existing experiences for this alumni to avoid duplicates on re-scrape
-        await this.alumniExperienceModel.destroy({ where: { alumni_id: alumniId } });
-
-        const experiencesToSave = [];
-        let currentJob = null;
-
-        for (const data of extractedData) {
-          const { title, company, dateRangeText } = data;
-          
-          // Basic date parsing (heuristic)
-          // dateRangeText usually looks like "Month Year - Month Year" or "Month Year - Present"
-          const parts = dateRangeText.split('-').map(p => p.trim());
-          const startPart = parts[0];
-          const endPart = parts[1];
-
-          const startDate = this.parseLinkedInDate(startPart);
-          const endDate = endPart && endPart.toLowerCase().includes('present') ? null : this.parseLinkedInDate(endPart);
-          const isCurrent = !endPart || endPart.toLowerCase().includes('present');
-
-          const startYear = startDate ? new Date(startDate).getFullYear() : 0;
-
-          // Filter: Only after or during graduation year
-          if (startYear >= profile.promo_year) {
-            experiencesToSave.push({
-              alumni_id: alumniId,
-              title,
-              company,
-              start_date: startDate || new Date().toISOString().split('T')[0],
-              end_date: endDate,
-              is_current: isCurrent,
-            });
-
-            if (isCurrent && !currentJob) {
-              currentJob = { title, company };
+      // --- TENTATIVE 1 : LINKEDIN DIRECT (SESSION) ---
+      if (liAtCookie) {
+        try {
+          await page.setCookie({ name: 'li_at', value: liAtCookie, domain: '.www.linkedin.com', path: '/', secure: true });
+          await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 20000 });
+          await new Promise(r => setTimeout(r, 3000));
+          if (!(await page.title()).toLowerCase().includes('sign up')) {
+            const data = await this.extractLinkedInData(page);
+            if (data.length > 0) {
+              await this.saveFullData(profile, data);
+              success = true;
             }
           }
-        }
+        } catch (e) { this.logger.warn('Direct LinkedIn failed'); }
+      }
 
-        if (experiencesToSave.length > 0) {
-          await this.alumniExperienceModel.bulkCreate(experiencesToSave);
-          this.logger.log(`>> Saved ${experiencesToSave.length} experiences for ${alumniId}`);
-        }
-
-        // Update main profile with current job
-        if (currentJob || (experiencesToSave.length > 0 && !currentJob)) {
-          const latest = currentJob || experiencesToSave[0];
-          await profile.update({
-            current_position: latest.title,
-            company: latest.company,
-            data_enriched: true,
-            scraping_status: 'COMPLETED',
-            scraping_error: null,
-          });
-        } else {
-          await profile.update({
-            scraping_status: 'COMPLETED',
-            scraping_error: 'No experiences found after graduation year',
-          });
-        }
-      } else {
-        this.logger.warn(`>> Could not extract experience data for ${url}`);
-        await profile.update({
-          scraping_status: 'FAILED',
-          scraping_error: 'Could not extract experience data from profile page',
+      // --- TENTATIVE 2 : DUCKDUCKGO PAR URL (Pour Sarah) ---
+      if (!success) {
+        this.logger.log(`>> Falling back to URL search for precision...`);
+        // On cherche l'URL entre guillemets pour forcer le résultat de ce profil précis
+        const query = `site:linkedin.com/in/ "${profile.first_name} ${profile.last_name}"`;
+        await page.goto(`https://duckduckgo.com/html/?q=${encodeURIComponent(query)}`, { waitUntil: 'networkidle2' });
+        
+        const searchResult = await page.evaluate(() => {
+          const res = document.querySelector('.result__title a, .result__a');
+          const snippet = document.querySelector('.result__snippet')?.textContent || '';
+          return res ? { title: res.textContent?.trim(), snippet } : null;
         });
+
+        if (searchResult && !searchResult.title?.includes('profiles')) {
+          await this.savePartialData(profile, searchResult.title || '', searchResult.snippet);
+          success = true;
+        }
       }
+
+      if (!success) throw new Error('All scraping paths failed to find specific profile data.');
+
     } catch (error) {
-      this.logger.error(`>> ERROR scraping ${url}: ${error.message}`);
-      await profile.update({
-        scraping_status: 'FAILED',
-        scraping_error: error.message,
-      });
-      throw error;
+      this.logger.error(`>> [FAILED] ${error.message}`);
+      await profile.update({ scraping_status: 'FAILED', scraping_error: error.message });
     } finally {
-      if (browser) {
-        await browser.close();
-      }
+      if (browser) await browser.close();
     }
   }
 
-  private parseLinkedInDate(dateStr: string): string | null {
-    if (!dateStr) return null;
-    const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
-    const parts = dateStr.split(' ');
+  private async extractLinkedInData(page: any) {
+    return await page.evaluate(() => {
+      const experiences = [];
+      const items = document.querySelectorAll('.pvs-list__outer-container li.artdeco-list__item');
+      items.forEach((item) => {
+        const title = item.querySelector('.t-bold span[aria-hidden="true"]')?.textContent?.trim();
+        const company = item.querySelector('.t-normal span[aria-hidden="true"]')?.textContent?.split('·')[0]?.trim();
+        const dates = item.querySelector('.t-black--light span[aria-hidden="true"]')?.textContent?.trim();
+        if (title && company) experiences.push({ title, company, dates });
+      });
+      return experiences;
+    });
+  }
+
+  private async saveFullData(profile: any, data: any[]) {
+    await this.alumniExperienceModel.destroy({ where: { alumni_id: profile.id } });
+    const experiences = data.map(d => ({
+        alumni_id: profile.id,
+        title: d.title,
+        company: d.company,
+        start_date: d.dates?.match(/\d{4}/) ? `${d.dates.match(/\d{4}/)[0]}-01-01` : `${profile.promo_year}-09-01`,
+        is_current: d.dates?.toLowerCase().includes('present') || d.dates?.toLowerCase().includes('aujourd')
+    }));
+    await this.alumniExperienceModel.bulkCreate(experiences);
+    await profile.update({ current_position: experiences[0].title, company: experiences[0].company, data_enriched: true, scraping_status: 'COMPLETED' });
+  }
+
+  private async savePartialData(profile: any, title: string, snippet: string) {
+    // Nettoyage : Sarah Otmane - Developpeuse Full stack - Crédit Agricole | LinkedIn
+    const parts = title.split(/[|–-—]/).map(p => p.trim());
+    const filtered = parts.filter(p => !p.toLowerCase().includes(profile.last_name.toLowerCase()) && !p.toLowerCase().includes('linkedin'));
     
-    let month = '01';
-    let year = '';
+    // Logique de séparation Poste / Entreprise plus fine
+    let position = filtered[0] || profile.diploma || 'Alumni';
+    let company = filtered[1] || 'Entreprise (LinkedIn)';
 
-    if (parts.length === 2) {
-      const mIdx = months.findIndex(m => parts[0].toLowerCase().startsWith(m));
-      if (mIdx !== -1) month = (mIdx + 1).toString().padStart(2, '0');
-      year = parts[1];
-    } else if (parts.length === 1) {
-      year = parts[0];
+    // Si on a trouvé un snippet avec "chez" ou "at"
+    const match = snippet.match(/(.*) (?:chez|at|@) (.*)/i);
+    if (match) {
+        position = match[1].trim();
+        company = match[2].split('.')[0].trim();
     }
 
-    if (year.length === 4) {
-      return `${year}-${month}-01`;
-    }
-    return null;
+    await profile.update({ current_position: position, company: company, data_enriched: true, scraping_status: 'COMPLETED' });
+    await this.alumniExperienceModel.destroy({ where: { alumni_id: profile.id } });
+    await this.alumniExperienceModel.create({ alumni_id: profile.id, title: position, company: company, start_date: `${profile.promo_year}-09-01`, is_current: true });
   }
 }
