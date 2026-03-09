@@ -2,6 +2,12 @@ import { WebSocketGateway, WebSocketServer, OnGatewayConnection, OnGatewayDiscon
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 
+interface JwtPayload {
+  sub: string;
+  email: string;
+  role: string;
+}
+
 @WebSocketGateway({
   cors: {
     origin: '*',
@@ -21,7 +27,7 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
         client.disconnect();
         return;
       }
-      const payload = this.jwtService.verify(token);
+      const payload = this.jwtService.verify(token) as JwtPayload;
       client.data.user = payload;
       client.join(`user_${payload.sub}`);
       console.log(`Notification Client connected: ${client.id} (User: ${payload.sub})`);
@@ -34,7 +40,7 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
     console.log(`Notification Client disconnected: ${client.id}`);
   }
 
-  sendToUser(userId: string, event: string, data: any) {
+  sendToUser(userId: string, event: string, data: unknown) {
     this.server.to(`user_${userId}`).emit(event, data);
   }
 }
