@@ -22,7 +22,7 @@ export class ScrapingProcessor {
 
   @Process('extract-job-history')
   async handleScraping(job: Job<{ alumniId: string; linkedinUrl?: string }>) {
-    const { alumniId, linkedinUrl } = job.data;
+    const { alumniId } = job.data;
     const profile = await this.alumniProfileModel.findByPk(alumniId);
     if (!profile) return;
 
@@ -40,25 +40,76 @@ export class ScrapingProcessor {
       const page = await browser.newPage();
       await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
 
-      let foundResult = null;
+      // RECHERCHE OPTIMISÉE : "Prénom Nom LinkedIn" est le plus fiable
+      const query = `linkedin "${profile.first_name} ${profile.last_name}"`;
+      this.logger.log(`>> Querying search engine: ${query}`);
       
-      // --- ÉTAPE 1 : RECHERCHE PAR URL (SOUPLE) ---
-      const targetUrl = linkedinUrl || profile.linkedin_url;
-      if (targetUrl) {
-          this.logger.log(`>> Step 1: Searching by URL...`);
-          foundResult = await this.searchDuckDuckGo(page, targetUrl);
-      }
+      await page.goto(`https://duckduckgo.com/html/?q=${encodeURIComponent(query)}`);
+      
+      const searchResult = await page.evaluate(() => {
+          const results = Array.from(document.querySelectorAll('.result__title a, .result__a'));
+          // On évite les pages de liste "10+ profiles"
+          const best = results.find(r => !r.textContent?.includes('10+') && !r.textContent?.includes('profiles'));
+          const snippet = best?.closest('.result')?.querySelector('.result__snippet')?.textContent || '';
+          return best ? { title: best.textContent?.trim(), snippet: snippet.trim() } : null;
+      });
 
-      // --- ÉTAPE 2 : RECHERCHE PAR NOM (SI ÉTAPE 1 ÉCHOUE OU GÉNÉRIQUE) ---
-      if (!foundResult || foundResult.title.includes('profiles')) {
-          this.logger.log(`>> Step 2: Searching by Name...`);
-          foundResult = await this.searchDuckDuckGo(page, `linkedin "${profile.first_name} ${profile.last_name}"`);
-      }
+      if (searchResult && searchResult.title) {
+          this.logger.log(`>> Raw Result: ${searchResult.title}`);
+          
+          // --- LOGIQUE DE DÉCOUPAGE INTELLIGENTE ---
+          // On retire d'abord LinkedIn et le Nom/Prénom pour isoler le reste
+          let info = searchResult.title
+            .replace(/LinkedIn/gi, '')
+            .replace(new RegExp(profile.first_name, 'gi'), '')
+            .replace(new RegExp(profile.last_name, 'gi'), '')
+            .replace(/[|–-—:]/g, '-') // Normalisation
+            .trim();
 
-      if (foundResult && foundResult.title) {
-        await this.processAndSave(profile, foundResult.title, foundResult.snippet);
+          // On nettoie les tirets résiduels
+          info = info.replace(/^-+|-+$/g, '').trim();
+
+          let position = '-';
+          let company = 'LinkedIn Profile';
+
+          // Tentative d'extraction depuis le snippet (plus précis pour le poste)
+          const jobMatch = searchResult.snippet.match(/([^.·]*)(?: chez | at | @ | is a )([^.·]*)/i);
+          
+          if (jobMatch) {
+              position = jobMatch[1].trim();
+              company = jobMatch[2].split('·')[0].trim();
+          } else if (info.includes('-')) {
+              // Si le titre ressemble à "Poste - Entreprise"
+              const parts = info.split('-').map(p => p.trim()).filter(p => p.length > 2);
+              position = parts[0] || '-';
+              company = parts[1] || 'LinkedIn Profile';
+          } else {
+              // Si un seul bloc, c'est souvent l'entreprise (ex: Wassim)
+              company = info;
+          }
+
+          // Nettoyage final pour Wassim (retirer "Assistant Chef de projet MOA" si tronqué)
+          position = position.replace(/^Expérience\s*:/i, '').trim();
+
+          await profile.update({
+            current_position: position,
+            company: company,
+            data_enriched: true,
+            scraping_status: 'COMPLETED'
+          });
+
+          await this.alumniExperienceModel.destroy({ where: { alumni_id: alumniId } });
+          await this.alumniExperienceModel.create({
+            alumni_id: alumniId,
+            title: position !== '-' ? position : 'En poste',
+            company: company,
+            start_date: `${profile.promo_year}-09-01`,
+            is_current: true
+          });
+
+          this.logger.log(`>> SUCCESS: [${position}] @ [${company}]`);
       } else {
-        throw new Error('Could not find any LinkedIn data on search engines.');
+          throw new Error('Search engine did not return a specific profile.');
       }
 
     } catch (error) {
@@ -67,69 +118,5 @@ export class ScrapingProcessor {
     } finally {
       if (browser) await browser.close();
     }
-  }
-
-  private async searchDuckDuckGo(page: any, query: string) {
-    await page.goto(`https://duckduckgo.com/html/?q=${encodeURIComponent(query)}`, { waitUntil: 'networkidle2' });
-    return await page.evaluate(() => {
-      const res = document.querySelector('.result__title a, .result__a');
-      const snip = document.querySelector('.result__snippet')?.textContent || '';
-      return res ? { title: res.textContent?.trim(), snippet: snip.trim() } : null;
-    });
-  }
-
-  private async processAndSave(profile: any, title: string, snippet: string) {
-    this.logger.log(`>> Analyzing: ${title}`);
-    
-    // On sépare le titre par les séparateurs classiques
-    const parts = title.split(/[|–\-\—\:]/).map(p => p.trim());
-    const filtered = parts.filter(p => {
-        const l = p.toLowerCase();
-        return l.length > 2 && 
-               !l.includes(profile.last_name.toLowerCase()) && 
-               !l.includes('linkedin') &&
-               !l.includes('france');
-    });
-
-    let position = profile.diploma || 'Alumni';
-    let company = 'LinkedIn Profile';
-
-    // Priorité au snippet pour le poste (plus précis)
-    // Exemple : "... est Développeur Fullstack chez Crédit Agricole ..."
-    const jobMatch = snippet.match(/([^.·]*)(?: chez | at | @ | is a )([^.·]*)/i);
-    
-    if (jobMatch) {
-        position = jobMatch[1].trim();
-        company = jobMatch[2].split('·')[0].trim();
-    } else if (filtered.length >= 2) {
-        position = filtered[0];
-        company = filtered[1];
-    } else if (filtered.length === 1) {
-        // Si un seul bloc, on essaie de deviner si c'est une entreprise ou un poste
-        if (filtered[0].toLowerCase().includes('assurance') || filtered[0].toLowerCase().includes('caisse')) {
-            company = filtered[0];
-        } else {
-            position = filtered[0];
-        }
-    }
-
-    // Mise à jour finale
-    await profile.update({
-      current_position: position,
-      company: company,
-      data_enriched: true,
-      scraping_status: 'COMPLETED'
-    });
-
-    await this.alumniExperienceModel.destroy({ where: { alumni_id: profile.id } });
-    await this.alumniExperienceModel.create({
-      alumni_id: profile.id,
-      title: position,
-      company: company,
-      start_date: `${profile.promo_year}-09-01`,
-      is_current: true
-    });
-
-    this.logger.log(`>> SUCCESS: [${position}] @ [${company}]`);
   }
 }
