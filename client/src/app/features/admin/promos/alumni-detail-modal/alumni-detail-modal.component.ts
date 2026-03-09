@@ -77,7 +77,7 @@ import { Alumni } from '../../../../core/services/alumni.service';
                             <p class="mt-0.5 text-sm text-gray-500">{{ exp.company }}</p>
                           </div>
                           <div class="mt-2 text-xs text-gray-400">
-                            {{ exp.start_date | date:'MMM yyyy' }} - {{ exp.is_current ? 'Aujourd'hui' : (exp.end_date | date:'MMM yyyy') }}
+                            {{ exp.start_date | date:'MMM yyyy' }} - {{ exp.is_current ? "Aujourd'hui" : (exp.end_date | date:'MMM yyyy') }}
                           </div>
                         </div>
                       </div>

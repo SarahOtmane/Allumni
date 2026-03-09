@@ -314,9 +314,12 @@ export class PromoDetailComponent implements OnInit, OnDestroy {
       this.loadAlumni();
     });
 
-    // Auto-refresh every 5 seconds if any alumnus is being processed
+    // Auto-refresh every 5 seconds if any alumnus is being processed or pending
     this.refreshSubscription = interval(5000).subscribe(() => {
-      if (this.alumni().some((a) => a.scraping_status === 'PROCESSING' || a.scraping_status === 'PENDING')) {
+      const needsRefresh = this.alumni().some(
+        (a) => a.scraping_status === 'PROCESSING' || a.scraping_status === 'PENDING'
+      );
+      if (needsRefresh) {
         this.loadAlumni();
       }
     });
