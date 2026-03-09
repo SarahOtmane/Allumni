@@ -26,13 +26,9 @@ export class ScrapingProcessor {
     const profile = await this.alumniProfileModel.findByPk(alumniId);
     if (!profile) return;
 
-    const url = linkedinUrl || profile.linkedin_url;
-    if (!url) return;
-
-    this.logger.log(`>> [TARGETED SCRAPE] alumni: ${profile.last_name}`);
+    this.logger.log(`>> [SMART SCRAPE] Target: ${profile.first_name} ${profile.last_name}`);
     await profile.update({ scraping_status: 'PROCESSING', scraping_error: null });
 
-    const liAtCookie = process.env.LINKEDIN_LI_AT;
     let browser;
     try {
       browser = await (puppeteer as any).launch({
@@ -44,98 +40,96 @@ export class ScrapingProcessor {
       const page = await browser.newPage();
       await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
 
-      let success = false;
-
-      // --- TENTATIVE 1 : LINKEDIN DIRECT (SESSION) ---
-      if (liAtCookie) {
-        try {
-          await page.setCookie({ name: 'li_at', value: liAtCookie, domain: '.www.linkedin.com', path: '/', secure: true });
-          await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 20000 });
-          await new Promise(r => setTimeout(r, 3000));
-          if (!(await page.title()).toLowerCase().includes('sign up')) {
-            const data = await this.extractLinkedInData(page);
-            if (data.length > 0) {
-              await this.saveFullData(profile, data);
-              success = true;
-            }
-          }
-        } catch (e) { this.logger.warn('Direct LinkedIn failed'); }
+      let foundResult = null;
+      
+      // --- ÉTAPE 1 : RECHERCHE PAR URL (SOUPLE) ---
+      const targetUrl = linkedinUrl || profile.linkedin_url;
+      if (targetUrl) {
+          this.logger.log(`>> Step 1: Searching by URL...`);
+          foundResult = await this.searchDuckDuckGo(page, targetUrl);
       }
 
-      // --- TENTATIVE 2 : DUCKDUCKGO PAR URL (Pour Sarah) ---
-      if (!success) {
-        this.logger.log(`>> Falling back to URL search for precision...`);
-        // On cherche l'URL entre guillemets pour forcer le résultat de ce profil précis
-        const query = `site:linkedin.com/in/ "${profile.first_name} ${profile.last_name}"`;
-        await page.goto(`https://duckduckgo.com/html/?q=${encodeURIComponent(query)}`, { waitUntil: 'networkidle2' });
-        
-        const searchResult = await page.evaluate(() => {
-          const res = document.querySelector('.result__title a, .result__a');
-          const snippet = document.querySelector('.result__snippet')?.textContent || '';
-          return res ? { title: res.textContent?.trim(), snippet } : null;
-        });
-
-        if (searchResult && !searchResult.title?.includes('profiles')) {
-          await this.savePartialData(profile, searchResult.title || '', searchResult.snippet);
-          success = true;
-        }
+      // --- ÉTAPE 2 : RECHERCHE PAR NOM (SI ÉTAPE 1 ÉCHOUE OU GÉNÉRIQUE) ---
+      if (!foundResult || foundResult.title.includes('profiles')) {
+          this.logger.log(`>> Step 2: Searching by Name...`);
+          foundResult = await this.searchDuckDuckGo(page, `linkedin "${profile.first_name} ${profile.last_name}"`);
       }
 
-      if (!success) throw new Error('All scraping paths failed to find specific profile data.');
+      if (foundResult && foundResult.title) {
+        await this.processAndSave(profile, foundResult.title, foundResult.snippet);
+      } else {
+        throw new Error('Could not find any LinkedIn data on search engines.');
+      }
 
     } catch (error) {
-      this.logger.error(`>> [FAILED] ${error.message}`);
+      this.logger.error(`>> [SCRAPING FAILED] ${error.message}`);
       await profile.update({ scraping_status: 'FAILED', scraping_error: error.message });
     } finally {
       if (browser) await browser.close();
     }
   }
 
-  private async extractLinkedInData(page: any) {
+  private async searchDuckDuckGo(page: any, query: string) {
+    await page.goto(`https://duckduckgo.com/html/?q=${encodeURIComponent(query)}`, { waitUntil: 'networkidle2' });
     return await page.evaluate(() => {
-      const experiences = [];
-      const items = document.querySelectorAll('.pvs-list__outer-container li.artdeco-list__item');
-      items.forEach((item) => {
-        const title = item.querySelector('.t-bold span[aria-hidden="true"]')?.textContent?.trim();
-        const company = item.querySelector('.t-normal span[aria-hidden="true"]')?.textContent?.split('·')[0]?.trim();
-        const dates = item.querySelector('.t-black--light span[aria-hidden="true"]')?.textContent?.trim();
-        if (title && company) experiences.push({ title, company, dates });
-      });
-      return experiences;
+      const res = document.querySelector('.result__title a, .result__a');
+      const snip = document.querySelector('.result__snippet')?.textContent || '';
+      return res ? { title: res.textContent?.trim(), snippet: snip.trim() } : null;
     });
   }
 
-  private async saveFullData(profile: any, data: any[]) {
-    await this.alumniExperienceModel.destroy({ where: { alumni_id: profile.id } });
-    const experiences = data.map(d => ({
-        alumni_id: profile.id,
-        title: d.title,
-        company: d.company,
-        start_date: d.dates?.match(/\d{4}/) ? `${d.dates.match(/\d{4}/)[0]}-01-01` : `${profile.promo_year}-09-01`,
-        is_current: d.dates?.toLowerCase().includes('present') || d.dates?.toLowerCase().includes('aujourd')
-    }));
-    await this.alumniExperienceModel.bulkCreate(experiences);
-    await profile.update({ current_position: experiences[0].title, company: experiences[0].company, data_enriched: true, scraping_status: 'COMPLETED' });
-  }
-
-  private async savePartialData(profile: any, title: string, snippet: string) {
-    // Nettoyage : Sarah Otmane - Developpeuse Full stack - Crédit Agricole | LinkedIn
-    const parts = title.split(/[|–-—]/).map(p => p.trim());
-    const filtered = parts.filter(p => !p.toLowerCase().includes(profile.last_name.toLowerCase()) && !p.toLowerCase().includes('linkedin'));
+  private async processAndSave(profile: any, title: string, snippet: string) {
+    this.logger.log(`>> Analyzing: ${title}`);
     
-    // Logique de séparation Poste / Entreprise plus fine
-    let position = filtered[0] || profile.diploma || 'Alumni';
-    let company = filtered[1] || 'Entreprise (LinkedIn)';
+    // On sépare le titre par les séparateurs classiques
+    const parts = title.split(/[|–\-\—\:]/).map(p => p.trim());
+    const filtered = parts.filter(p => {
+        const l = p.toLowerCase();
+        return l.length > 2 && 
+               !l.includes(profile.last_name.toLowerCase()) && 
+               !l.includes('linkedin') &&
+               !l.includes('france');
+    });
 
-    // Si on a trouvé un snippet avec "chez" ou "at"
-    const match = snippet.match(/(.*) (?:chez|at|@) (.*)/i);
-    if (match) {
-        position = match[1].trim();
-        company = match[2].split('.')[0].trim();
+    let position = profile.diploma || 'Alumni';
+    let company = 'LinkedIn Profile';
+
+    // Priorité au snippet pour le poste (plus précis)
+    // Exemple : "... est Développeur Fullstack chez Crédit Agricole ..."
+    const jobMatch = snippet.match(/([^.·]*)(?: chez | at | @ | is a )([^.·]*)/i);
+    
+    if (jobMatch) {
+        position = jobMatch[1].trim();
+        company = jobMatch[2].split('·')[0].trim();
+    } else if (filtered.length >= 2) {
+        position = filtered[0];
+        company = filtered[1];
+    } else if (filtered.length === 1) {
+        // Si un seul bloc, on essaie de deviner si c'est une entreprise ou un poste
+        if (filtered[0].toLowerCase().includes('assurance') || filtered[0].toLowerCase().includes('caisse')) {
+            company = filtered[0];
+        } else {
+            position = filtered[0];
+        }
     }
 
-    await profile.update({ current_position: position, company: company, data_enriched: true, scraping_status: 'COMPLETED' });
+    // Mise à jour finale
+    await profile.update({
+      current_position: position,
+      company: company,
+      data_enriched: true,
+      scraping_status: 'COMPLETED'
+    });
+
     await this.alumniExperienceModel.destroy({ where: { alumni_id: profile.id } });
-    await this.alumniExperienceModel.create({ alumni_id: profile.id, title: position, company: company, start_date: `${profile.promo_year}-09-01`, is_current: true });
+    await this.alumniExperienceModel.create({
+      alumni_id: profile.id,
+      title: position,
+      company: company,
+      start_date: `${profile.promo_year}-09-01`,
+      is_current: true
+    });
+
+    this.logger.log(`>> SUCCESS: [${position}] @ [${company}]`);
   }
 }
