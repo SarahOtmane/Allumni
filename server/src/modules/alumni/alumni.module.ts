@@ -9,10 +9,7 @@ import { User } from '../users/models/user.model';
 import { ScrapingModule } from '../scraping/scraping.module';
 
 @Module({
-  imports: [
-    SequelizeModule.forFeature([AlumniProfile, Promotion, User, AlumniExperience]),
-    ScrapingModule,
-  ],
+  imports: [SequelizeModule.forFeature([AlumniProfile, Promotion, User, AlumniExperience]), ScrapingModule],
   controllers: [AlumniController],
   providers: [AlumniService],
 })

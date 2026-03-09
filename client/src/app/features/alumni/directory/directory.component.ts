@@ -73,19 +73,20 @@ import { Router } from '@angular/router';
               class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col hover:shadow-md transition-all group"
             >
               <div class="flex items-center space-x-4 mb-4">
-                              <div
-                                class="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-lg shrink-0"
-                              >
-                                {{ alumnus.first_name.slice(0, 1) }}{{ alumnus.last_name.slice(0, 1) }}
-                              </div>
-                              <div class="min-w-0">
-                                <h3 class="font-bold text-gray-900 truncate">
-                                  @if (alumnus.first_name || alumnus.last_name) {
-                                    {{ alumnus.first_name }} {{ alumnus.last_name }}
-                                  } @else {
-                                    Anonyme
-                                  }
-                                </h3>                  <p class="text-sm text-indigo-600 font-medium truncate">
+                <div
+                  class="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-lg shrink-0"
+                >
+                  {{ alumnus.first_name.slice(0, 1) }}{{ alumnus.last_name.slice(0, 1) }}
+                </div>
+                <div class="min-w-0">
+                  <h3 class="font-bold text-gray-900 truncate">
+                    @if (alumnus.first_name || alumnus.last_name) {
+                      {{ alumnus.first_name }} {{ alumnus.last_name }}
+                    } @else {
+                      Anonyme
+                    }
+                  </h3>
+                  <p class="text-sm text-indigo-600 font-medium truncate">
                     {{ alumnus.current_position || 'Poste non renseigné' }}
                   </p>
                 </div>
