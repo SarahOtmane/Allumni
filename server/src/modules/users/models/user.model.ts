@@ -19,7 +19,7 @@ export class User extends Model {
 
   @Column({
     type: DataType.STRING,
-    allowNull: false,
+    allowNull: true,
   })
   password_hash: string;
 
@@ -31,9 +31,21 @@ export class User extends Model {
 
   @Column({
     type: DataType.BOOLEAN,
-    defaultValue: true,
+    defaultValue: false,
   })
   is_active: boolean;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+  })
+  activation_token: string;
+
+  @Column({
+    type: DataType.DATE,
+    allowNull: true,
+  })
+  token_expires_at: Date;
 
   @HasOne(() => AlumniProfile)
   alumni_profile: AlumniProfile;

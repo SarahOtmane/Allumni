@@ -1,5 +1,6 @@
-import { Column, DataType, Model, Table, ForeignKey, BelongsTo } from 'sequelize-typescript';
+import { Column, DataType, Model, Table, ForeignKey, BelongsTo, HasMany } from 'sequelize-typescript';
 import { User } from '../../users/models/user.model';
+import { AlumniExperience } from './alumni-experience.model';
 
 @Table({ tableName: 'alumni_profiles', underscored: true })
 export class AlumniProfile extends Model {
@@ -20,6 +21,9 @@ export class AlumniProfile extends Model {
 
   @BelongsTo(() => User)
   user: User;
+
+  @HasMany(() => AlumniExperience)
+  experiences: AlumniExperience[];
 
   @Column({ type: DataType.STRING, allowNull: false })
   first_name: string;
@@ -50,4 +54,17 @@ export class AlumniProfile extends Model {
 
   @Column({ type: DataType.BOOLEAN, defaultValue: false })
   data_enriched: boolean;
+
+  @Column({
+    type: DataType.ENUM('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED'),
+    defaultValue: 'PENDING',
+    allowNull: false,
+  })
+  scraping_status: string;
+
+  @Column({ type: DataType.TEXT, allowNull: true })
+  scraping_error: string;
+
+  @Column({ type: DataType.DATE, allowNull: true })
+  last_scraped_at: Date;
 }

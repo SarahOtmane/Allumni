@@ -20,6 +20,8 @@ services:
     build:
       context: .
       dockerfile: server/Dockerfile
+    init: true
+    shm_size: '2gb'
     ports:
       - "3000:3000"
     environment:
@@ -44,7 +46,7 @@ services:
   mysql_db:
     image: mysql:8.0
     ports:
-      - "33060:3306" # Expose a different host port to avoid conflict
+      - "33062:3306" # Expose a different host port to avoid conflict
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-alumni_db}

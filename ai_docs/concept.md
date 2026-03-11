@@ -10,13 +10,18 @@ Ce document définit la vision, les objectifs, les fonctionnalités et l'archite
 - **Pour l'école :** Obtenir des statistiques fiables sur l'employabilité et le parcours des diplômés. Centraliser la communication et la diffusion d'opportunités.
 - **Pour les alumni :** Faciliter le réseautage, l'accès à des opportunités de carrière exclusives et le maintien du lien avec la communauté de l'école.
 
-## 2. Acteurs & Rôles (RBAC)
+## 2. Acteurs & Rôles (RBAC) & Accès
 
-L'application gère trois rôles distincts avec des permissions granulaires :
+L'application n'autorise pas l'inscription publique (Self-Register). L'accès est strictement contrôlé par invitation.
+
+- **Flux d'activation (commun à tous) :**
+  1. L'utilisateur est créé dans la base (soit par l'Admin, soit via Import CSV/Scraping).
+  2. Un email est envoyé avec un lien contenant un **Token d'activation** unique (valide 48h).
+  3. L'utilisateur clique sur le lien, définit son mot de passe, et active son compte.
 
 - **School Admin (Backoffice) :**
-  - **Accès :** Total.
-  - **Permissions :** Gestion CRUD des alumni, import de données, gestion des contenus (offres d'emploi, événements), visualisation des dashboards.
+  - **Création :** Le premier Admin est initialisé par le développeur.
+  - **Permissions :** Création de comptes Staff/Admin, Import Alumni, Gestion CRUD totale.
 
 - **School Staff (Backoffice) :**
   - **Accès :** Limité (Lecture seule).

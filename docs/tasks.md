@@ -5,89 +5,82 @@
 
 ## État Actuel du Projet
 
-**Phase :** ✅ Monorepo Initialisé  
-**Dernière mise à jour :** 2026-02-18
+**Phase :** 🛠️ Développement des fonctionnalités core  
+**Dernière mise à jour :** 2026-02-19
 
 ---
 
 ## ✅ Terminé
 
+### Fondations & Infrastructure
 - [x] Conception du produit (`ai_docs/concept.md`)
-- [x] Documentation architecture (`ai_docs/architecture.md`)
-- [x] Documentation base de données (`ai_docs/database.md`)
-- [x] Documentation patterns de code (`ai_docs/patterns.md`)
-- [x] Documentation services (`ai_docs/services.md`)
-- [x] `GEMINI.md` créé à la racine
-- [x] `ai_docs/tasks.md` créé (Initialement dans `docs/tasks.md`, déplacé/consolidé ici)
-- [x] Méthodologie PRP (`concept_library/cc_PRP_flow/`)
-- [x] Commandes Gemini CLI (`.gemini/commands/`)
-- [x] PRP d'initialisation créé (`PRPs/00-initialization.md`)
-- [x] **Exécution du PRP d'initialisation** :
-    - [x] Initialisation du monorepo (structure de dossiers `client/`, `server/`)
-    - [x] `docker-compose.yml` principal (mysql, redis, server, client, nginx)
-    - [x] Dockerfiles (client Angular, server NestJS)
-    - [x] Config Nginx (reverse proxy pour Angular)
-    - [x] `server/.env` (variables d'environnement initiales)
-    - [x] ESLint configuré (client + server, configs autonomes)
-    - [x] Prettier configuré (client + server, config commune racine)
-    - [x] Confirmation "Hello World" Frontend (Angular)
-    - [x] Confirmation "Hello World" Backend (NestJS API)
+- [x] Documentation technique (`ai_docs/architecture.md`, `ai_docs/database.md`, `ai_docs/patterns.md`, `ai_docs/services.md`)
+- [x] Initialisation du Monorepo (Docker, Angular, NestJS, MySQL, Redis)
+- [x] Environnement de développement avec Hot-Reload
+- [x] Configuration ESLint & Prettier (Client & Server)
+
+### Backend (NestJS)
+- [x] Initialisation des modules : Users, Auth, Alumni, Jobs, Events, Chat, Mail
+- [x] Modèles Sequelize & Migrations (Users, AlumniProfile, Promotion, JobOffer, Event, EventRegistration)
+- [x] Système d'Auth complet : JWT Strategy, Guards, Login
+- [x] Système d'invitation & activation de compte (Token, Mail)
+- [x] RBAC (Roles Decorator & Guard)
+- [x] CRUD Admin pour Alumni, Staff, Jobs et Events
+- [x] Logique d'import CSV pour les alumni
+- [x] Endpoints statistiques pour le dashboard
+- [x] Tests unitaires complets pour tous les services (34 tests, 100% success)
+
+### Frontend (Angular)
+- [x] Layouts globaux (Admin & Alumni) avec Header dynamique et Sidebar
+- [x] Authentification : Page de login, Activation de compte
+- [x] Guards & Interceptor JWT
+- [x] **Backoffice Admin** :
+    - [x] Dashboard avec KPIs (StatsCard)
+    - [x] Gestion des promotions (Liste, Création)
+    - [x] Gestion des étudiants (Liste par promo, Détails, Édition, Suppression, Import CSV)
+    - [x] Gestion de l'équipe (Invitation Staff/Admin, Liste)
+    - [x] Restriction des permissions Staff (Lecture seule pour l'équipe)
+    - [x] Gestion des Offres d'Emploi (CRUD)
+    - [x] Gestion des Événements (CRUD)
+- [x] **Portail Alumni** :
+    - [x] Job Board (Liste filtrable, Détails en modal, Skeleton loading)
+    - [x] Events Board (Liste par onglets, Inscription/Désinscription, Confirmation)
+    - [x] Annuaire (Vue restreinte par promo, Recherche par nom/poste, Skeleton loading)
 
 ---
 
 ## 🔄 En Cours
 
-- [ ] Aucune tâche en cours suite à l'initialisation du monorepo.
+- [ ] Optimisation de l'UX et polissage des interfaces.
 
 ---
 
 ## 📋 Backlog (Par Ordre de Priorité)
 
-### Phase 1 — Setup & Infrastructure (reste à faire)
-- [x] `docker-compose.dev.yml` (hot reload pour dev)
-- [x] Variables d'environnement (`.env.example`)
-- [x] PRP Créé : `PRPs/infra-dev-environment-setup.md`
+### Phase 5 — Pipeline de Scraping (LinkedIn)
+- [x] PRP Créé : `PRPs/scraping-linkedin-current-job.md`
+- [x] PRP Créé : `PRPs/scraping-job-history.md`
+- [ ] Module `scraping` NestJS (Producer & Consumer)
+- [ ] Extraction du poste actuel et de l'historique chronologique
+- [ ] Gestion des erreurs et retry (profils privés, etc.)
 
-### Phase 2 — Backend Foundation
-- [x] PRP Créé : `PRPs/backend-foundation-models-routes.md` (Définition Modèles & Routes)
-- [x] Initialisation NestJS avec modules de base (Users, Auth, Alumni, Jobs, Events, Chat)
-- [x] Configuration Sequelize & Migrations initiales
-- [x] Implémentation de tous les modèles Sequelize
-- [x] Mise en place du RBAC (Roles Decorator & Guard)
-- [ ] Module `auth` (JWT Strategy, Guards, Login/Register)
-- [ ] Module `auth` (JWT Strategy, Guards, Login/Register)
-- [ ] Module `users` (Entity, Service, Controller)
-- [ ] Migration Sequelize : table `users`
-- [ ] Migration Sequelize : table `alumni_profiles`
-- [ ] Migration Sequelize : tables `job_offers`, `events`, `event_registrations`
-- [ ] Migration Sequelize : tables `conversations`, `messages`
+### Phase 6 — Communication & Engagement
+- [x] PRP Créé : `PRPs/alumni-messaging.md`
+- [x] PRP Créé : `PRPs/admin-messaging.md`
+- [x] Messagerie instantanée entre Alumni (temps réel)
+- [x] Messagerie Admin/Staff vers tous les utilisateurs
+- [x] Système de notifications temps réel (Messages, Jobs, Events)
+- [ ] Système de notifications par Email (nouvelles offres ou events)
 
-### Phase 3 — Frontend Foundation
-- [ ] Initialisation Angular avec routing
-- [ ] Layout global (Header, Sidebar)
-- [ ] Module `auth` (pages Login/Register)
-- [ ] Guards Angular (authGuard, roleGuard)
-- [ ] Interceptor HTTP (authInterceptor — attacher le token JWT)
-
-### Phase 4 — Features Backoffice Admin
-- [ ] Dashboard Analytics (KPIs, Charts)
-- [ ] Gestion Alumni CRUD (liste, détail, édition)
-- [ ] Import CSV (upload + validation)
-
-### Phase 5 — Pipeline de Scraping
-- [ ] Module `scraping` NestJS
-- [ ] Producer BullMQ (ajout à la queue)
-- [ ] Consumer/Processor Puppeteer (scraping LinkedIn)
-- [ ] Gestion des erreurs et retry
-
-### Phase 6 — Portail Alumni
-- [ ] Annuaire (vue restreinte)
-- [ ] Job Board (liste + candidature)
-- [ ] Events Board (liste + inscription)
-- [ ] Messagerie interne (conversations + messages)
+### Phase 7 — Finalisation & Déploiement
+- [x] CI/CD : Pipeline GitHub Actions (Lint, Build, Test)
+- [x] `docker-compose.yml` de production
+- [ ] Configuration Nginx pour la production (SSL avec Certbot)
+- [ ] Scripts de backup base de données
+- [ ] Documentation utilisateur final
 
 ---
 
 ## 🚀 Prochaine Étape
 
-**Proposer un PRP pour la "Phase 2 — Backend Foundation"** : Initialisation des modules NestJS de base et du module `auth`.
+**Implémenter le pipeline de scraping LinkedIn** pour enrichir automatiquement les profils alumni importés.

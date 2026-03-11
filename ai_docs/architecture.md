@@ -36,9 +36,14 @@ alumni-platform/
 │   │   ├── modules/            # Modules par domaine
 │   │   │   ├── auth/           # JWT Strategy, Guards
 │   │   │   ├── users/          # User Entity, Services
-│   │   │   ├── alumni/         # Profils spécifiques & Data
-│   │   │   ├── scraping/       # Logique d'import CSV & Queue
-│   │   │   └── content/        # Jobs, Events
+│   │   │   ├── alumni/         # Profils spécifiques & Promos
+│   │   │   ├── admin/          # Dashboard & Statistiques
+│   │   │   ├── jobs/           # Gestion des offres d'emploi
+│   │   │   ├── events/         # Gestion des événements
+│   │   │   ├── mail/           # Service d'envoi d'emails
+│   │   │   ├── chat/           # Messagerie instantanée temps réel
+│   │   │   ├── notifications/  # Système de notifications centralisé
+│   │   │   └── scraping/       # (Phase 5) Logique d'import CSV & Queue
 │   │   ├── common/             # Decorators, DTOs partagés, Filters
 │   │   ├── config/             # Config Sequelize & Env
 │   │   └── main.ts
@@ -57,8 +62,9 @@ alumni-platform/
 ## Sécurité & Pipeline
 
 ### Authentification
-- JWT (JSON Web Tokens) : Utilisé pour sécuriser toutes les requêtes API.
-- Guards NestJS : @UseGuards(JwtAuthGuard, RolesGuard) sur les contrôleurs.
+- **Invitation-Only :** Pas d'endpoint de création de compte public.
+- **Activation Flow :** Token sécurisé généré lors de la création manuelle ou de l'import. Le token expire après 48h.
+- **JWT (JSON Web Tokens) :** Utilisé pour sécuriser toutes les requêtes API une fois le compte activé.
 
 ### Pipeline de Scraping (Asynchrone)
 - Import : Admin upload CSV → API stocke en BDD (Status: PENDING).

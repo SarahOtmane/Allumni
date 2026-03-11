@@ -16,7 +16,7 @@ module.exports = {
       },
       password_hash: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       role: {
         type: Sequelize.ENUM('ADMIN', 'STAFF', 'ALUMNI'),
@@ -24,7 +24,15 @@ module.exports = {
       },
       is_active: {
         type: Sequelize.BOOLEAN,
-        defaultValue: true,
+        defaultValue: false,
+      },
+      activation_token: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      token_expires_at: {
+        type: Sequelize.DATE,
+        allowNull: true,
       },
       created_at: {
         allowNull: false,

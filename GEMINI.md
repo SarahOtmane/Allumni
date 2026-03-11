@@ -48,8 +48,13 @@ alumni-platform/
 │       │   ├── auth/
 │       │   ├── users/
 │       │   ├── alumni/
-│       │   ├── scraping/
-│       │   └── content/
+│       │   ├── admin/
+│       │   ├── jobs/
+│       │   ├── events/
+│       │   ├── mail/
+│       │   ├── chat/
+│       │   ├── notifications/
+│       │   └── scraping/          # (Phase 5) LinkedIn Scraping
 │       ├── common/                # Decorators, DTOs, Filters
 │       └── config/
 ├── nginx/                         # Config Nginx
@@ -96,6 +101,9 @@ docker compose up mysql_db
 
 # Rebuild complet (après modification d'un Dockerfile)
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+
+#creer les tables
+docker compose exec server npx sequelize-cli db:migrate
 ```
 
 ### Arrêt & Nettoyage
@@ -234,7 +242,8 @@ NODE_ENV=development
 type UserRole = 'ADMIN' | 'STAFF' | 'ALUMNI'
 ```
 
-- **ADMIN** : CRUD complet, Import CSV, Gestion contenus, Dashboard analytics
+- **Accès par Invitation Uniquement** : Pas d'inscription publique.
+- **ADMIN** : CRUD complet, Invitations, Import CSV, Gestion contenus, Dashboard analytics
 - **STAFF** : Lecture seule (profils alumni, statistiques)
 - **ALUMNI** : Annuaire (vue restreinte), Jobs, Events, Messagerie
 

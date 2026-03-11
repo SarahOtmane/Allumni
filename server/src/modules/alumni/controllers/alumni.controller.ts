@@ -1,36 +1,100 @@
-import { Controller, Get, Post, Patch, Param, UseGuards } from '@nestjs/common';
-import { Roles } from '../../../common/decorators/roles.decorator';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  UseGuards,
+  Body,
+  UseInterceptors,
+  UploadedFile,
+  ParseIntPipe,
+  Patch,
+  Delete,
+  Request,
+  Query,
+} from '@nestjs/common';
+import { AlumniService } from '../services/alumni.service';
+import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
+import { Roles } from '../../../common/decorators/roles.decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Express } from 'express';
+import { UpdateAlumniDto } from '../dto/update-alumni.dto';
+import { ScrapingService } from '../../scraping/services/scraping.service';
 
 @Controller('alumni')
-@UseGuards(RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class AlumniController {
-  @Get()
+  constructor(
+    private readonly alumniService: AlumniService,
+    private readonly scrapingService: ScrapingService,
+  ) {}
+
+  @Get('promos')
+  @Roles('ADMIN', 'STAFF', 'ALUMNI')
+  findAllPromos() {
+    return this.alumniService.findAllPromos();
+  }
+
+  @Post('promos')
   @Roles('ADMIN', 'STAFF')
-  findAll() {
-    return { message: 'Full alumni list' };
+  createPromo(@Body('year', ParseIntPipe) year: number) {
+    return this.alumniService.createPromo(year);
   }
 
-  @Get('directory')
-  @Roles('ALUMNI')
-  findDirectory() {
-    return { message: 'Restricted alumni directory' };
+  @Get('promos/:year/linkedin-urls')
+  @Roles('ADMIN', 'STAFF')
+  getLinkedinUrls(@Param('year', ParseIntPipe) year: number) {
+    return this.alumniService.getLinkedinUrls(year);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return { message: `Alumni detail for ${id}` };
+  @Get('promos/:year')
+  @Roles('ADMIN', 'STAFF', 'ALUMNI')
+  findByYear(
+    @Param('year', ParseIntPipe) year: number,
+    @Request() req,
+    @Query('search') search?: string,
+    @Query('diploma') diploma?: string,
+  ) {
+    return this.alumniService.findByYear(year, req.user.role, search, req.user.id, diploma);
+  }
+
+  @Get('promos/:year/diplomas')
+  @Roles('ADMIN', 'STAFF', 'ALUMNI')
+  getDistinctDiplomasByYear(@Param('year', ParseIntPipe) year: number) {
+    return this.alumniService.getDistinctDiplomasByYear(year);
   }
 
   @Patch(':id')
-  @Roles('ALUMNI', 'ADMIN')
-  update(@Param('id') id: string) {
-    return { message: `Update alumni ${id}` };
+  @Roles('ADMIN', 'STAFF')
+  update(@Param('id') id: string, @Body() updateDto: UpdateAlumniDto) {
+    return this.alumniService.update(id, updateDto);
   }
 
-  @Post('import')
-  @Roles('ADMIN')
-  importCsv() {
-    return { message: 'CSV Import triggered' };
+  @Delete(':id')
+  @Roles('ADMIN', 'STAFF')
+  remove(@Param('id') id: string) {
+    return this.alumniService.remove(id);
+  }
+
+  @Post(':id/scrape')
+  @Roles('ADMIN', 'STAFF')
+  async triggerScrape(@Param('id') id: string) {
+    const profile = await this.alumniService.findOne(id);
+    await this.scrapingService.addScrapingJob(profile.id, profile.linkedin_url);
+    return { message: 'Scraping job enqueued successfully' };
+  }
+
+  @Post('import/:year')
+  @Roles('ADMIN', 'STAFF')
+  @UseInterceptors(FileInterceptor('file'))
+  importCsv(@Param('year', ParseIntPipe) year: number, @UploadedFile() file: Express.Multer.File) {
+    return this.alumniService.importCsv(year, file.buffer);
+  }
+
+  @Post('import-scraped-data')
+  @Roles('ADMIN', 'STAFF')
+  importScrapedData(@Body() data: any[]) {
+    return this.alumniService.importScrapedData(data);
   }
 }
