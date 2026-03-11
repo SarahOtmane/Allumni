@@ -8,6 +8,7 @@ import {
   Param,
   BadRequestException,
   NotFoundException,
+  Request,
 } from '@nestjs/common';
 import { AuthService } from '../../auth/auth.service';
 import { InviteUserDto } from '../dto/invite-user.dto';
@@ -28,8 +29,12 @@ export class UsersController {
   ) {}
 
   @Post('invite')
-  @Roles('ADMIN')
-  async invite(@Body() inviteDto: InviteUserDto) {
+  @Roles('ADMIN', 'STAFF')
+  async invite(@Body() inviteDto: InviteUserDto, @Request() req) {
+    // Hierarchy check: STAFF cannot invite an ADMIN
+    if (req.user.role === 'STAFF' && inviteDto.role === 'ADMIN') {
+      throw new BadRequestException('Un membre du staff ne peut pas inviter un administrateur');
+    }
     return this.authService.inviteUser(inviteDto.email, inviteDto.role);
   }
 
@@ -48,16 +53,22 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @Roles('ADMIN')
-  async remove(@Param('id') id: string) {
+  @Roles('ADMIN', 'STAFF')
+  async remove(@Param('id') id: string, @Request() req) {
     const user = await this.userModel.findByPk(id);
 
     if (!user) {
       throw new NotFoundException('Utilisateur non trouvé');
     }
 
-    if (user.role === 'ADMIN') {
-      throw new BadRequestException('Impossible de supprimer un compte administrateur');
+    // Hierarchy check: STAFF cannot remove an ADMIN
+    if (req.user.role === 'STAFF' && user.role === 'ADMIN') {
+      throw new BadRequestException('Un membre du staff ne peut pas supprimer un administrateur');
+    }
+
+    // Protection: Cannot remove self
+    if (req.user.id === user.id) {
+      throw new BadRequestException('Impossible de supprimer votre propre compte');
     }
 
     await user.destroy();

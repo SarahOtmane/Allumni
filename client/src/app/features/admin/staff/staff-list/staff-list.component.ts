@@ -18,7 +18,7 @@ import { Router } from '@angular/router';
       </header>
 
       <!-- Formulaire d'invitation rapide -->
-      @if (authService.currentUser()?.role === 'ADMIN') {
+      @if (authService.currentUser()?.role === 'ADMIN' || authService.currentUser()?.role === 'STAFF') {
         <section class="mb-8 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <h2 class="text-lg font-semibold mb-4 text-gray-800">Inviter un nouveau membre</h2>
           <form [formGroup]="inviteForm" (ngSubmit)="onInvite()" class="flex flex-col sm:flex-row gap-4">
@@ -35,8 +35,10 @@ import { Router } from '@angular/router';
                 formControlName="role"
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all appearance-none bg-white"
               >
-                <option value="STAFF">Staff (Lecture)</option>
-                <option value="ADMIN">Admin (Total)</option>
+                <option value="STAFF">Staff</option>
+                @if (authService.currentUser()?.role === 'ADMIN') {
+                  <option value="ADMIN">Administrateur</option>
+                }
               </select>
             </div>
             <button
