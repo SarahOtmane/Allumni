@@ -6,6 +6,8 @@ import { AlumniService } from './alumni.service';
 import { AlumniProfile } from '../models/alumni-profile.model';
 import { Promotion } from '../models/promotion.model';
 import { User } from '../../users/models/user.model';
+import { AlumniExperience } from '../models/alumni-experience.model';
+import { ScrapingService } from '../../scraping/services/scraping.service';
 
 describe('AlumniService', () => {
   let service: AlumniService;
@@ -40,6 +42,15 @@ describe('AlumniService', () => {
     findOrCreate: jest.fn(),
   };
 
+  const mockAlumniExperienceModel = {
+    destroy: jest.fn(),
+    bulkCreate: jest.fn(),
+  };
+
+  const mockScrapingService = {
+    addScrapingJob: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -55,6 +66,14 @@ describe('AlumniService', () => {
         {
           provide: getModelToken(User),
           useValue: mockUserModel,
+        },
+        {
+          provide: getModelToken(AlumniExperience),
+          useValue: mockAlumniExperienceModel,
+        },
+        {
+          provide: ScrapingService,
+          useValue: mockScrapingService,
         },
         {
           provide: Sequelize,
@@ -78,7 +97,7 @@ describe('AlumniService', () => {
       alumniModel.findByPk.mockResolvedValue(mockProfile);
 
       const result = await service.findOne('1');
-      expect(result).toEqual(mockProfile);
+      expect(result).toEqual(mockProfile as any);
     });
 
     it('should throw NotFoundException if not found', async () => {

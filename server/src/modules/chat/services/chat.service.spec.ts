@@ -100,7 +100,7 @@ describe('ChatService', () => {
 
       const result = await service.saveMessage('c1', 'u1', 'hi');
 
-      expect(result).toEqual(mockMsg);
+      expect(result).toEqual(mockMsg as any);
       expect(messageModel.create).toHaveBeenCalledWith({
         conversation_id: 'c1',
         sender_id: 'u1',

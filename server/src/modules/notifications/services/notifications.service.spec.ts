@@ -66,7 +66,7 @@ describe('NotificationsService', () => {
 
       const result = await service.findAll(userId);
 
-      expect(result).toEqual(mockResult);
+      expect(result).toEqual(mockResult as any);
       expect(notificationModel.findAll).toHaveBeenCalledWith({
         where: { user_id: userId },
         order: [['created_at', 'DESC']],
@@ -86,7 +86,7 @@ describe('NotificationsService', () => {
 
       const result = await service.create(userId, type, title, content);
 
-      expect(result).toEqual(mockResult);
+      expect(result).toEqual(mockResult as any);
       expect(notificationModel.create).toHaveBeenCalled();
       expect(gateway.sendToUser).toHaveBeenCalledWith(userId, 'newNotification', mockResult);
     });

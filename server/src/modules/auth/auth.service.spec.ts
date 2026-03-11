@@ -73,7 +73,7 @@ describe('AuthService', () => {
 
       const result = await service.validateUser({ email: 'test@test.com', password: 'password' });
 
-      expect(result).toEqual(mockUser);
+      expect(result).toEqual(mockUser as any);
       expect(userModel.findOne).toHaveBeenCalledWith({ where: { email: 'test@test.com' } });
     });
 

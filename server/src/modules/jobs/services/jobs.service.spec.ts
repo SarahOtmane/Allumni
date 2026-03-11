@@ -53,7 +53,7 @@ describe('JobsService', () => {
 
       const result = await service.create(createDto as any, authorId);
 
-      expect(result).toEqual(mockJob);
+      expect(result).toEqual(mockJob as any);
       expect(jobModel.create).toHaveBeenCalledWith({ ...createDto, author_id: authorId });
       expect(notificationsService.notifyAllAlumni).toHaveBeenCalled();
     });
@@ -65,7 +65,7 @@ describe('JobsService', () => {
       jobModel.findByPk.mockResolvedValue(mockJob);
 
       const result = await service.findOne('job-1');
-      expect(result).toEqual(mockJob);
+      expect(result).toEqual(mockJob as any);
     });
 
     it('should throw NotFoundException if not found', async () => {
