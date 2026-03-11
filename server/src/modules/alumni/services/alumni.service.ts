@@ -33,6 +33,8 @@ export class AlumniService {
     private promotionModel: typeof Promotion,
     @InjectModel(User)
     private userModel: typeof User,
+    @InjectModel(AlumniExperience)
+    private alumniExperienceModel: typeof AlumniExperience,
     private sequelize: Sequelize,
     private scrapingService: ScrapingService,
   ) {}
@@ -271,5 +273,90 @@ export class AlumniService {
           }
         });
     });
+  }
+
+  async getLinkedinUrls(year: number) {
+    const profiles = await this.alumniProfileModel.findAll({
+      where: { promo_year: year },
+      attributes: ['linkedin_url'],
+    });
+
+    return {
+      profileUrls: profiles
+        .map((p) => p.linkedin_url)
+        .filter((url) => !!url && url.trim() !== ''),
+    };
+  }
+
+  async importScrapedData(scrapedData: any[]) {
+    const summary = { updated: 0, skipped: 0 };
+
+    for (const item of scrapedData) {
+      const url = item.linkedinUrl || item.linkedinPublicUrl;
+      if (!url) {
+        summary.skipped++;
+        continue;
+      }
+
+      const profile = await this.alumniProfileModel.findOne({
+        where: { linkedin_url: url },
+      });
+
+      if (profile) {
+        const transaction = await this.sequelize.transaction();
+        try {
+          // Extraction des expériences adaptée au format Apify fourni
+          const experiencesData = (item.experiences || []).map((exp: any) => {
+            // Tentative de parsing des dates simpliste pour le format DATEONLY
+            // On utilise is_current si end_date est absente ou "Present"
+            const startDate = exp.jobStartedOn ? new Date(exp.jobStartedOn).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+            const isCurrent = !exp.jobEndedOn || exp.jobStillWorking;
+            const endDate = (!isCurrent && exp.jobEndedOn) ? new Date(exp.jobEndedOn).toISOString().split('T')[0] : null;
+
+            return {
+              alumni_id: profile.id,
+              title: exp.title || 'Inconnu',
+              company: exp.companyName || exp.company || 'Inconnu',
+              start_date: startDate,
+              end_date: endDate,
+              is_current: isCurrent,
+            };
+          });
+
+          // Supprimer les anciennes expériences avant d'ajouter les nouvelles
+          await this.alumniExperienceModel.destroy({
+            where: { alumni_id: profile.id },
+            transaction,
+          });
+
+          // Créer les nouvelles expériences
+          if (experiencesData.length > 0) {
+            await this.alumniExperienceModel.bulkCreate(experiencesData, { transaction });
+          }
+
+          await profile.update(
+            {
+              current_position: item.jobTitle || item.headline || profile.current_position,
+              company: item.companyName || item.company || profile.company,
+              data_enriched: true,
+              last_scraped_at: new Date(),
+              scraping_status: 'COMPLETED',
+            },
+            { transaction },
+          );
+
+          await transaction.commit();
+          summary.updated++;
+        } catch (error) {
+          await transaction.rollback();
+          console.error(`Erreur lors de la mise à jour du profil ${url}:`, error);
+          summary.skipped++;
+        }
+      } else {
+        summary.skipped++;
+      }
+    }
+
+    return summary;
   }
 }

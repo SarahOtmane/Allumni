@@ -23,7 +23,7 @@ import { Router } from '@angular/router';
       </header>
 
       <!-- Formulaire d'invitation rapide -->
-      @if (authService.currentUser()?.role === 'ADMIN') {
+      @if (authService.currentUser()?.role === 'ADMIN' || authService.currentUser()?.role === 'STAFF') {
         <section class="mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
           <div class="flex items-center space-x-3 mb-6">
             <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
@@ -53,8 +53,10 @@ import { Router } from '@angular/router';
                 formControlName="role"
                 class="w-full px-6 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500/20 focus:bg-white text-sm font-bold text-gray-900 outline-none transition-all appearance-none cursor-pointer"
               >
-                <option value="STAFF">Staff (Lecture seule)</option>
-                <option value="ADMIN">Administrateur (Total)</option>
+                <option value="STAFF">Staff</option>
+                @if (authService.currentUser()?.role === 'ADMIN') {
+                  <option value="ADMIN">Administrateur</option>
+                }
               </select>
               <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

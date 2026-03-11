@@ -83,4 +83,12 @@ export class AlumniService {
     formData.append('file', file);
     return this.http.post<unknown>(`${this.apiUrl}/import/${year}`, formData);
   }
+
+  getLinkedinUrls(year: number) {
+    return this.http.get<{ profileUrls: string[] }>(`${this.apiUrl}/promos/${year}/linkedin-urls`);
+  }
+
+  importScrapedData(data: any[]) {
+    return this.http.post<{ updated: number; skipped: number }>(`${this.apiUrl}/import-scraped-data`, data);
+  }
 }

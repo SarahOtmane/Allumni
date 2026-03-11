@@ -64,4 +64,7 @@ export class AlumniProfile extends Model {
 
   @Column({ type: DataType.TEXT, allowNull: true })
   scraping_error: string;
+
+  @Column({ type: DataType.DATE, allowNull: true })
+  last_scraped_at: Date;
 }

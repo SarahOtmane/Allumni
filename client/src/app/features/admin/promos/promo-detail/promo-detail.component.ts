@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AlumniService, Alumni } from '../../../../core/services/alumni.service';
@@ -51,22 +51,59 @@ export interface ImportSummary {
           <p class="text-gray-500 font-medium mt-1">Liste des étudiants et diplômés de cette année.</p>
         </div>
 
-        @if (authService.currentUser()?.role === 'ADMIN') {
-          <button
-            (click)="showImportModal.set(true)"
-            class="inline-flex items-center px-6 py-3 rounded-2xl text-sm font-black text-white bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all active:scale-95"
-          >
-            <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-              />
-            </svg>
-            Importer CSV
-          </button>
-        }
+        <div class="flex flex-wrap gap-3">
+          @if (authService.currentUser()?.role === 'ADMIN' || authService.currentUser()?.role === 'STAFF') {
+            <button
+              (click)="onExportForApify()"
+              class="inline-flex items-center px-6 py-3 rounded-2xl text-sm font-black text-indigo-600 bg-white border-2 border-indigo-100 hover:border-indigo-600 hover:bg-indigo-50 transition-all active:scale-95 shadow-sm"
+              title="Télécharger les URLs LinkedIn pour Apify"
+            >
+              <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 16v1a2 2 0 002 2h10a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
+              </svg>
+              Export Apify
+            </button>
+
+            <button
+              (click)="triggerJsonInput()"
+              class="inline-flex items-center px-6 py-3 rounded-2xl text-sm font-black text-emerald-600 bg-white border-2 border-emerald-100 hover:border-emerald-600 hover:bg-emerald-50 transition-all active:scale-95 shadow-sm"
+              title="Importer le résultat JSON d'Apify"
+            >
+              <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 16v1a2 2 0 002 2h10a2 2 0 002-2v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                />
+              </svg>
+              Import Apify
+            </button>
+            <input type="file" #jsonInput class="hidden" accept=".json" (change)="onJsonFileSelected($event)" />
+
+            @if (authService.currentUser()?.role === 'ADMIN') {
+              <button
+                (click)="showImportModal.set(true)"
+                class="inline-flex items-center px-6 py-3 rounded-2xl text-sm font-black text-white bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all active:scale-95"
+              >
+                <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                  />
+                </svg>
+                Importer CSV
+              </button>
+            }
+          }
+        </div>
       </header>
 
       @if (importSummary()) {
@@ -398,7 +435,7 @@ export interface ImportSummary {
       </div>
     </div>
 
-    <!-- Modals (non modifiées car gérées ailleurs ou par leur propre composant) -->
+    <!-- Modals -->
     @if (showImportModal()) {
       <app-csv-instructions-modal (modalClosed)="showImportModal.set(false)" (fileUploaded)="onFileUploaded($event)" />
     }
@@ -427,6 +464,8 @@ export interface ImportSummary {
   `,
 })
 export class PromoDetailComponent implements OnInit, OnDestroy {
+  @ViewChild('jsonInput') jsonInput!: ElementRef<HTMLInputElement>;
+
   private route = inject(ActivatedRoute);
   private alumniService = inject(AlumniService);
   private chatService = inject(ChatService);
@@ -508,12 +547,60 @@ export class PromoDetailComponent implements OnInit, OnDestroy {
     });
   }
 
-  onEditAlumnus(alumnus: Alumni) {
-    this.selectedAlumnus.set(alumnus);
+  onExportForApify() {
+    this.alumniService.getLinkedinUrls(this.year()).subscribe({
+      next: (data) => {
+        if (!data.profileUrls || data.profileUrls.length === 0) {
+          alert("Aucune URL LinkedIn trouvée pour cette promotion.");
+          return;
+        }
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `linkedin-urls-promo-${this.year()}.json`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => {
+        alert("Erreur lors de l'exportation des URLs.");
+      }
+    });
+  }
+
+  triggerJsonInput() {
+    this.jsonInput.nativeElement.click();
+  }
+
+  onJsonFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        this.alumniService.importScrapedData(data).subscribe({
+          next: (res) => {
+            alert(`${res.updated} profils mis à jour avec succès !`);
+            this.loadAlumni();
+            event.target.value = ''; // Reset input
+          },
+          error: (err) => alert("Erreur lors de l'importation du JSON Apify"),
+        });
+      } catch (error) {
+        alert("Le fichier JSON n'est pas valide.");
+      }
+    };
+    reader.readAsText(file);
   }
 
   onViewDetail(alumnus: Alumni) {
     this.selectedAlumnusForDetail.set(alumnus);
+  }
+
+  onEditAlumnus(alumnus: Alumni) {
+    this.selectedAlumnus.set(alumnus);
   }
 
   onContactAlumni(userId: string) {

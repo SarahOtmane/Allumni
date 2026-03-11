@@ -21,7 +21,7 @@ import { AuthService } from '../../../../core/services/auth.service';
           <p class="text-gray-500 font-medium mt-1">Gérez les années de diplôme et accédez aux listes d'étudiants.</p>
         </div>
 
-        @if (authService.currentUser()?.role === 'ADMIN') {
+        @if (authService.currentUser()?.role === 'ADMIN' || authService.currentUser()?.role === 'STAFF') {
           <div
             class="flex items-center bg-white p-2 rounded-2xl shadow-sm border border-gray-100 group focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all"
           >
