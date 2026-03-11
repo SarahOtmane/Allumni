@@ -86,8 +86,21 @@ export class AlumniService {
     return this.alumniProfileModel.findAll({
       where,
       attributes: isAlumni
-        ? ['id', 'user_id', 'first_name', 'last_name', 'current_position', 'promo_year', 'diploma']
-        : undefined,
+        ? ['id', 'user_id', 'first_name', 'last_name', 'current_position', 'company', 'promo_year', 'diploma', 'linkedin_url']
+        : [
+            'id',
+            'user_id',
+            'first_name',
+            'last_name',
+            'current_position',
+            'company',
+            'promo_year',
+            'diploma',
+            'linkedin_url',
+            'status',
+            'data_enriched',
+            'scraping_status',
+          ],
       include: isAlumni ? [] : [{ model: User, attributes: ['id', 'email', 'is_active'] }, { model: AlumniExperience }],
       order: [['last_name', 'ASC']],
     });
