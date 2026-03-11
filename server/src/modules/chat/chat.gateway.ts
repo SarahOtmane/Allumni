@@ -8,7 +8,7 @@ import {
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { UnauthorizedException } from '@nestjs/common';
+import { UnauthorizedException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ChatService } from './services/chat.service';
 import { Message } from './models/message.model';
@@ -23,6 +23,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
+  private readonly logger = new Logger(ChatGateway.name);
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly chatService: ChatService,
@@ -34,14 +36,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (!token) throw new UnauthorizedException();
       const payload = this.jwtService.verify(token);
       client.data.user = payload;
-      console.log(`WS Connected: ${client.id} (User: ${payload.sub})`);
+      this.logger.log(`WS Connected: ${client.id} (User: ${payload.sub})`);
     } catch {
       client.disconnect();
     }
   }
 
   handleDisconnect(client: Socket) {
-    console.log(`WS Disconnected: ${client.id}`);
+    this.logger.log(`WS Disconnected: ${client.id}`);
   }
 
   @SubscribeMessage('joinRoom')

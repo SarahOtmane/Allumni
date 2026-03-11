@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards, Request, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, UseGuards, Request, Patch, Logger } from '@nestjs/common';
 import { EventsService } from '../services/events.service';
 import { CreateEventDto } from '../dto/create-event.dto';
 import { UpdateEventDto } from '../dto/update-event.dto';
@@ -9,14 +9,16 @@ import { Roles } from '../../../common/decorators/roles.decorator';
 @Controller('event-management')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class EventsController {
+  private readonly logger = new Logger(EventsController.name);
+
   constructor(private readonly eventsService: EventsService) {}
 
   @Post()
   @Roles('ADMIN', 'STAFF')
   async create(@Body() createEventDto: CreateEventDto, @Request() req) {
-    console.log('--- CREATE EVENT ---');
-    console.log('Payload:', createEventDto);
-    console.log('User:', req.user);
+    this.logger.log('--- CREATE EVENT ---');
+    this.logger.log(`Payload: ${JSON.stringify(createEventDto)}`);
+    this.logger.log(`User: ${JSON.stringify(req.user)}`);
     return this.eventsService.create(createEventDto, req.user.id);
   }
 

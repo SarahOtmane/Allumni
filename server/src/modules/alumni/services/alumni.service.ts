@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { AlumniProfile } from '../models/alumni-profile.model';
 import { Promotion } from '../models/promotion.model';
@@ -26,6 +26,8 @@ interface CsvRow {
 
 @Injectable()
 export class AlumniService {
+  private readonly logger = new Logger(AlumniService.name);
+
   constructor(
     @InjectModel(AlumniProfile)
     private alumniProfileModel: typeof AlumniProfile,
@@ -311,12 +313,12 @@ export class AlumniService {
 
   async importScrapedData(scrapedData: any[]) {
     const summary = { updated: 0, skipped: 0 };
-    console.log(`[IMPORT] Début de l'importation de ${scrapedData.length} entrées Apify`);
+    this.logger.log(`[IMPORT] Début de l'importation de ${scrapedData.length} entrées Apify`);
 
     for (const item of scrapedData) {
       const rawUrl = item.linkedinUrl || item.linkedinPublicUrl || item.url;
       if (!rawUrl) {
-        console.warn("[IMPORT] Entrée sautée : pas d'URL trouvée", item);
+        this.logger.warn("[IMPORT] Entrée sautée : pas d'URL trouvée", item);
         summary.skipped++;
         continue;
       }
@@ -330,7 +332,7 @@ export class AlumniService {
         .replace(/\/$/, '')
         .trim();
 
-      console.log(`[IMPORT] Recherche d'un profil pour l'URL nettoyée : ${cleanUrl} (Originale: ${rawUrl})`);
+      this.logger.log(`[IMPORT] Recherche d'un profil pour l'URL nettoyée : ${cleanUrl} (Originale: ${rawUrl})`);
 
       // On cherche un profil dont l'URL linkedin contient cette chaîne nettoyée
       const profile = await this.alumniProfileModel.findOne({
@@ -342,7 +344,7 @@ export class AlumniService {
       });
 
       if (profile) {
-        console.log(`[IMPORT] Profil trouvé ! ID: ${profile.id}, Nom: ${profile.last_name}`);
+        this.logger.log(`[IMPORT] Profil trouvé ! ID: ${profile.id}, Nom: ${profile.last_name}`);
         const transaction = await this.sequelize.transaction();
         try {
           // Extraction des expériences
@@ -404,16 +406,16 @@ export class AlumniService {
           summary.updated++;
         } catch (error) {
           await transaction.rollback();
-          console.error(`[IMPORT] Erreur lors de la mise à jour du profil ${rawUrl}:`, error);
+          this.logger.error(`[IMPORT] Erreur lors de la mise à jour du profil ${rawUrl}:`, error);
           summary.skipped++;
         }
       } else {
-        console.warn(`[IMPORT] Aucun profil trouvé en base pour "${cleanUrl}"`);
+        this.logger.warn(`[IMPORT] Aucun profil trouvé en base pour "${cleanUrl}"`);
         summary.skipped++;
       }
     }
 
-    console.log(`[IMPORT] Terminé : ${summary.updated} mis à jour, ${summary.skipped} sautés`);
+    this.logger.log(`[IMPORT] Terminé : ${summary.updated} mis à jour, ${summary.skipped} sautés`);
     return summary;
   }
 }
