@@ -7,10 +7,23 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   standalone: true,
   imports: [CommonModule, RouterLink, RouterLinkActive],
   template: `
-    <div class="flex flex-col w-64 bg-slate-900 h-screen text-white border-r border-slate-800">
-      <div class="p-6">
-        <h1 class="text-xl font-bold tracking-wider text-indigo-400">ALUMNI</h1>
-        <p class="text-xs text-slate-400 mt-1 uppercase">Backoffice Admin</p>
+    <div
+      class="flex flex-col w-72 bg-gradient-to-b from-slate-900 to-slate-950 h-screen text-white border-r border-white/5 relative z-20"
+    >
+      <!-- Logo Section -->
+      <div class="p-8 mb-4">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+            <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-xl font-black tracking-tight text-white italic">ALUMNI<span class="text-indigo-400 font-normal">HUB</span></h1>
+            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em]">Management Suite</p>
+          </div>
+        </div>
       </div>
 
       <nav class="flex-1 px-4 space-y-2 mt-4">
@@ -116,6 +129,30 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
         <div class="bg-slate-800 rounded-lg p-3 text-xs text-slate-400">v1.0.0-dev</div>
       </div>
     </div>
+
+    <style>
+      .nav-item {
+        @apply flex items-center px-4 py-3.5 text-slate-400 rounded-2xl transition-all duration-300 hover:text-white hover:bg-white/5;
+      }
+      .active-link {
+        @apply bg-indigo-600/10 text-indigo-400 shadow-sm ring-1 ring-indigo-500/20;
+      }
+      .active-link .icon-container {
+        @apply text-indigo-400 bg-indigo-500/10;
+      }
+      .icon-container {
+        @apply p-2 rounded-xl mr-4 transition-all duration-300;
+      }
+      .nav-item:hover .icon-container {
+        @apply bg-white/5 text-white scale-110;
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        @apply bg-slate-800 rounded-full;
+      }
+    </style>
   `,
 })
 export class SidebarComponent {}
