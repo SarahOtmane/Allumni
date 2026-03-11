@@ -39,6 +39,7 @@
     - [x] Gestion des promotions (Liste, Création)
     - [x] Gestion des étudiants (Liste par promo, Détails, Édition, Suppression, Import CSV)
     - [x] Gestion de l'équipe (Invitation Staff/Admin, Liste)
+    - [x] Restriction des permissions Staff (Lecture seule pour l'équipe)
     - [x] Gestion des Offres d'Emploi (CRUD)
     - [x] Gestion des Événements (CRUD)
 - [x] **Portail Alumni** :
