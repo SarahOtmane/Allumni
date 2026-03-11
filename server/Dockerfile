@@ -1,52 +1,39 @@
-# Stage 1: Build the NestJS application
-FROM node:18-alpine AS builder
+# Utilisation de Debian Slim pour une stabilité maximale avec Puppeteer
+FROM node:18-slim AS builder
+
+# Installation des dépendances pour Chromium sur Debian
+RUN apt-get update && apt-get install -y \
+    chromium \
+    fonts-ipafont-gothic \
+    fonts-wqy-zenhei \
+    fonts-thai-tlwg \
+    fonts-kacst \
+    fonts-freefont-ttf \
+    libxss1 \
+    tini \
+    --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Install Chromium for Puppeteer (needed for scraping)
-RUN apk add --no-cache chromium nss freetype harfbuzz ca-certificates ttf-freefont
-
+# Configuration Puppeteer
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
-# Copy root package files
+# Gestion du monorepo
 COPY package.json package-lock.json ./
-
-# Copy server specific package.json ONLY
 COPY server/package.json ./server/
+COPY client/package.json ./client/
 
-# Install dependencies
 RUN npm install
 
-# Copy source code
+# Copie du reste du code et build
 COPY . .
-
-# Build the NestJS application
 WORKDIR /app/server
 RUN npm run build
 
-# Stage 2: Run the NestJS application
-FROM node:18-alpine AS runner
-
-WORKDIR /app
-
-# Install Chromium in runner too
-RUN apk add --no-cache chromium nss freetype harfbuzz ca-certificates ttf-freefont
-
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
-
-# Copy root and server package files
-COPY package.json package-lock.json ./
-COPY server/package.json ./server/
-
-# Install production dependencies
-RUN npm install --only=production
-
-# Copy built app
-COPY --from=builder /app/server/dist ./server/dist
-COPY --from=builder /app/server/.env ./server/.env
+# Entrypoint pour gérer les processus zombies
+ENTRYPOINT ["/usr/bin/tini", "--"]
 
 EXPOSE 3000
-
-CMD ["node", "server/dist/main"]
+CMD ["npm", "run", "start:dev"]

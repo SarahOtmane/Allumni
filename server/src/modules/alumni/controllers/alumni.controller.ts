@@ -20,11 +20,15 @@ import { Roles } from '../../../common/decorators/roles.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
 import { UpdateAlumniDto } from '../dto/update-alumni.dto';
+import { ScrapingService } from '../../scraping/services/scraping.service';
 
 @Controller('alumni')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class AlumniController {
-  constructor(private readonly alumniService: AlumniService) {}
+  constructor(
+    private readonly alumniService: AlumniService,
+    private readonly scrapingService: ScrapingService,
+  ) {}
 
   @Get('promos')
   @Roles('ADMIN', 'STAFF', 'ALUMNI')
@@ -46,8 +50,19 @@ export class AlumniController {
 
   @Get('promos/:year')
   @Roles('ADMIN', 'STAFF', 'ALUMNI')
-  findByYear(@Param('year', ParseIntPipe) year: number, @Request() req, @Query('search') search?: string) {
-    return this.alumniService.findByYear(year, req.user.role, search, req.user.id);
+  findByYear(
+    @Param('year', ParseIntPipe) year: number,
+    @Request() req,
+    @Query('search') search?: string,
+    @Query('diploma') diploma?: string,
+  ) {
+    return this.alumniService.findByYear(year, req.user.role, search, req.user.id, diploma);
+  }
+
+  @Get('promos/:year/diplomas')
+  @Roles('ADMIN', 'STAFF', 'ALUMNI')
+  getDistinctDiplomasByYear(@Param('year', ParseIntPipe) year: number) {
+    return this.alumniService.getDistinctDiplomasByYear(year);
   }
 
   @Patch(':id')
@@ -60,6 +75,14 @@ export class AlumniController {
   @Roles('ADMIN', 'STAFF')
   remove(@Param('id') id: string) {
     return this.alumniService.remove(id);
+  }
+
+  @Post(':id/scrape')
+  @Roles('ADMIN', 'STAFF')
+  async triggerScrape(@Param('id') id: string) {
+    const profile = await this.alumniService.findOne(id);
+    await this.scrapingService.addScrapingJob(profile.id, profile.linkedin_url);
+    return { message: 'Scraping job enqueued successfully' };
   }
 
   @Post('import/:year')

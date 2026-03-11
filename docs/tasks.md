@@ -39,6 +39,7 @@
     - [x] Gestion des promotions (Liste, Création)
     - [x] Gestion des étudiants (Liste par promo, Détails, Édition, Suppression, Import CSV)
     - [x] Gestion de l'équipe (Invitation Staff/Admin, Liste)
+    - [x] Restriction des permissions Staff (Lecture seule pour l'équipe)
     - [x] Gestion des Offres d'Emploi (CRUD)
     - [x] Gestion des Événements (CRUD)
 - [x] **Portail Alumni** :
@@ -57,9 +58,10 @@
 ## 📋 Backlog (Par Ordre de Priorité)
 
 ### Phase 5 — Pipeline de Scraping (LinkedIn)
-- [ ] Module `scraping` NestJS
-- [ ] Producer BullMQ (ajout à la queue lors de l'import CSV)
-- [ ] Consumer/Processor Puppeteer (scraping LinkedIn pour extraire le poste actuel)
+- [x] PRP Créé : `PRPs/scraping-linkedin-current-job.md`
+- [x] PRP Créé : `PRPs/scraping-job-history.md`
+- [ ] Module `scraping` NestJS (Producer & Consumer)
+- [ ] Extraction du poste actuel et de l'historique chronologique
 - [ ] Gestion des erreurs et retry (profils privés, etc.)
 
 ### Phase 6 — Communication & Engagement

@@ -6,6 +6,15 @@ export interface Promotion {
   year: number;
 }
 
+export interface AlumniExperience {
+  id: string;
+  title: string;
+  company: string;
+  start_date: string;
+  end_date?: string;
+  is_current: boolean;
+}
+
 export interface Alumni {
   id: string;
   user_id: string;
@@ -16,13 +25,15 @@ export interface Alumni {
   linkedin_url?: string;
   current_position?: string;
   company?: string;
-  experiences?: any[];
   status: string;
   data_enriched: boolean;
+  scraping_status?: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  scraping_error?: string;
   user?: {
     email: string;
     is_active: boolean;
   };
+  experiences?: AlumniExperience[];
 }
 
 @Injectable({
@@ -40,12 +51,19 @@ export class AlumniService {
     return this.http.post<Promotion>(`${this.apiUrl}/promos`, { year });
   }
 
-  getAlumniByYear(year: number, search?: string) {
-    let params = {};
+  getAlumniByYear(year: number, search?: string, diploma?: string) {
+    const params: Record<string, string> = {};
     if (search) {
-      params = { search };
+      params['search'] = search;
+    }
+    if (diploma) {
+      params['diploma'] = diploma;
     }
     return this.http.get<Alumni[]>(`${this.apiUrl}/promos/${year}`, { params });
+  }
+
+  getDistinctDiplomas(year: number) {
+    return this.http.get<string[]>(`${this.apiUrl}/promos/${year}/diplomas`);
   }
 
   updateAlumni(id: string, alumni: Partial<Alumni> & { email?: string }) {
@@ -54,6 +72,10 @@ export class AlumniService {
 
   deleteAlumni(id: string) {
     return this.http.delete(`${this.apiUrl}/${id}`);
+  }
+
+  triggerScraping(id: string) {
+    return this.http.post(`${this.apiUrl}/${id}/scrape`, {});
   }
 
   importCsv(year: number, file: File) {
@@ -66,7 +88,7 @@ export class AlumniService {
     return this.http.get<{ profileUrls: string[] }>(`${this.apiUrl}/promos/${year}/linkedin-urls`);
   }
 
-  importScrapedData(data: any[]) {
+  importScrapedData(data: unknown[]) {
     return this.http.post<{ updated: number; skipped: number }>(`${this.apiUrl}/import-scraped-data`, data);
   }
 }

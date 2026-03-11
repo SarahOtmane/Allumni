@@ -29,12 +29,8 @@ export class UsersController {
   ) {}
 
   @Post('invite')
-  @Roles('ADMIN', 'STAFF')
-  async invite(@Body() inviteDto: InviteUserDto, @Request() req) {
-    // Hierarchy check: STAFF cannot invite an ADMIN
-    if (req.user.role === 'STAFF' && inviteDto.role === 'ADMIN') {
-      throw new BadRequestException('Un membre du staff ne peut pas inviter un administrateur');
-    }
+  @Roles('ADMIN')
+  async invite(@Body() inviteDto: InviteUserDto) {
     return this.authService.inviteUser(inviteDto.email, inviteDto.role);
   }
 
@@ -53,17 +49,12 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @Roles('ADMIN', 'STAFF')
+  @Roles('ADMIN')
   async remove(@Param('id') id: string, @Request() req) {
     const user = await this.userModel.findByPk(id);
 
     if (!user) {
       throw new NotFoundException('Utilisateur non trouvé');
-    }
-
-    // Hierarchy check: STAFF cannot remove an ADMIN
-    if (req.user.role === 'STAFF' && user.role === 'ADMIN') {
-      throw new BadRequestException('Un membre du staff ne peut pas supprimer un administrateur');
     }
 
     // Protection: Cannot remove self
