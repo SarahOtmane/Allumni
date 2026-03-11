@@ -18,7 +18,8 @@ WORKDIR /app
 
 # Configuration Puppeteer
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
+    PATH=/app/node_modules/.bin:$PATH
 
 # Gestion du monorepo
 COPY package.json package-lock.json ./

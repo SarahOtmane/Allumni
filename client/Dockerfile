@@ -9,6 +9,7 @@ RUN apk add --no-cache chromium nss freetype freetype-dev harfbuzz ca-certificat
 
 # Set Chrome binary path for Angular tests
 ENV CHROME_BIN=/usr/bin/chromium-browser
+ENV PATH /app/node_modules/.bin:$PATH
 
 # Copy root package files
 COPY package.json package-lock.json ./

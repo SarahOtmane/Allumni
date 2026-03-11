@@ -10,6 +10,8 @@ services:
     command: npm run start -w client -- --host 0.0.0.0 --poll 5000 --disable-host-check
     volumes:
       - .:/app
+      - /app/node_modules
+      - /app/client/node_modules
     ports:
       - "4200:4200"
 
@@ -22,6 +24,8 @@ services:
     command: npm run start:dev -w server
     volumes:
       - .:/app
+      - /app/node_modules
+      - /app/server/node_modules
     ports:
       - "3000:3000"
     env_file:
