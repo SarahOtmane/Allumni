@@ -39,8 +39,19 @@ export class AlumniController {
 
   @Get('promos/:year')
   @Roles('ADMIN', 'STAFF', 'ALUMNI')
-  findByYear(@Param('year', ParseIntPipe) year: number, @Request() req, @Query('search') search?: string) {
-    return this.alumniService.findByYear(year, req.user.role, search, req.user.id);
+  findByYear(
+    @Param('year', ParseIntPipe) year: number,
+    @Request() req,
+    @Query('search') search?: string,
+    @Query('diploma') diploma?: string,
+  ) {
+    return this.alumniService.findByYear(year, req.user.role, search, req.user.id, diploma);
+  }
+
+  @Get('promos/:year/diplomas')
+  @Roles('ADMIN', 'STAFF', 'ALUMNI')
+  getDistinctDiplomasByYear(@Param('year', ParseIntPipe) year: number) {
+    return this.alumniService.getDistinctDiplomasByYear(year);
   }
 
   @Patch(':id')

@@ -13,14 +13,23 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
       <!-- Logo Section -->
       <div class="p-8 mb-4">
         <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <div
+            class="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20"
+          >
             <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"
+              />
             </svg>
           </div>
           <div>
-            <h1 class="text-xl font-black tracking-tight text-white italic">ALUMNI<span class="text-indigo-400 font-normal">HUB</span></h1>
+            <h1 class="text-xl font-black tracking-tight text-white italic">
+              ALUMNI<span class="text-indigo-400 font-normal">HUB</span>
+            </h1>
             <p class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em]">Management Suite</p>
           </div>
         </div>

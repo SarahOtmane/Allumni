@@ -103,6 +103,46 @@ export interface ImportSummary {
         </div>
       }
 
+      <!-- Barre de Filtres -->
+      <div class="mb-8 flex flex-col md:flex-row gap-6 items-center justify-between">
+        <div class="relative w-full md:w-96">
+          <input
+            type="text"
+            (input)="onSearch($event)"
+            placeholder="Rechercher un étudiant, poste..."
+            class="w-full pl-12 pr-4 py-4 rounded-2xl border border-gray-100 bg-white shadow-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none text-sm font-medium placeholder:text-gray-400"
+          />
+          <svg
+            class="h-5 w-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+        </div>
+
+        <div class="flex items-center gap-4 w-full md:w-auto">
+          <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] whitespace-nowrap"
+            >Filtrer par diplôme :</span
+          >
+          <select
+            (change)="onDiplomaChange($event)"
+            class="px-6 py-4 rounded-2xl border border-gray-100 bg-white shadow-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none text-sm font-black text-gray-700 min-w-[240px] appearance-none cursor-pointer italic"
+          >
+            <option value="">Tous les diplômes</option>
+            @for (diploma of diplomas(); track diploma) {
+              <option [value]="diploma">{{ diploma }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
       <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-100">
@@ -113,6 +153,9 @@ export interface ImportSummary {
                 </th>
                 <th class="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
                   LinkedIn
+                </th>
+                <th class="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                  Diplôme
                 </th>
                 <th class="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
                   Poste Actuel
@@ -160,6 +203,13 @@ export interface ImportSummary {
                     } @else {
                       <span class="text-[10px] font-bold text-gray-300 uppercase italic">Non lié</span>
                     }
+                  </td>
+                  <td class="px-8 py-6">
+                    <span
+                      class="text-xs font-bold text-gray-600 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 italic"
+                    >
+                      {{ alumnus.diploma || 'N/A' }}
+                    </span>
                   </td>
                   <td class="px-8 py-6">
                     @if (alumnus.current_position) {
@@ -301,6 +351,9 @@ export class PromoDetailComponent implements OnInit {
 
   year = signal<number>(0);
   alumni = signal<Alumni[]>([]);
+  diplomas = signal<string[]>([]);
+  searchTerm = signal<string>('');
+  selectedDiploma = signal<string>('');
   showImportModal = signal(false);
   importSummary = signal<ImportSummary | null>(null);
   selectedAlumnus = signal<Alumni | null>(null);
@@ -310,11 +363,30 @@ export class PromoDetailComponent implements OnInit {
     this.route.params.subscribe((params) => {
       this.year.set(+params['year']);
       this.loadAlumni();
+      this.loadDiplomas();
     });
   }
 
   loadAlumni() {
-    this.alumniService.getAlumniByYear(this.year()).subscribe((data) => this.alumni.set(data));
+    this.alumniService
+      .getAlumniByYear(this.year(), this.searchTerm(), this.selectedDiploma())
+      .subscribe((data) => this.alumni.set(data));
+  }
+
+  loadDiplomas() {
+    this.alumniService.getDistinctDiplomas(this.year()).subscribe((data) => this.diplomas.set(data));
+  }
+
+  onSearch(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.searchTerm.set(input.value);
+    this.loadAlumni();
+  }
+
+  onDiplomaChange(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    this.selectedDiploma.set(select.value);
+    this.loadAlumni();
   }
 
   onFileUploaded(file: File) {

@@ -39,12 +39,19 @@ export class AlumniService {
     return this.http.post<Promotion>(`${this.apiUrl}/promos`, { year });
   }
 
-  getAlumniByYear(year: number, search?: string) {
-    let params = {};
+  getAlumniByYear(year: number, search?: string, diploma?: string) {
+    const params: Record<string, string> = {};
     if (search) {
-      params = { search };
+      params['search'] = search;
+    }
+    if (diploma) {
+      params['diploma'] = diploma;
     }
     return this.http.get<Alumni[]>(`${this.apiUrl}/promos/${year}`, { params });
+  }
+
+  getDistinctDiplomas(year: number) {
+    return this.http.get<string[]>(`${this.apiUrl}/promos/${year}/diplomas`);
   }
 
   updateAlumni(id: string, alumni: Partial<Alumni> & { email?: string }) {

@@ -29,13 +29,17 @@ export class AlumniService {
     return this.promotionModel.create({ year });
   }
 
-  async findByYear(year: number, userRole?: string, search?: string, currentUserId?: string) {
+  async findByYear(year: number, userRole?: string, search?: string, currentUserId?: string, diploma?: string) {
     const isAlumni = userRole === 'ALUMNI';
 
     const where: any = { promo_year: year };
 
     if (isAlumni && currentUserId) {
       where.user_id = { [Op.ne]: currentUserId };
+    }
+
+    if (diploma) {
+      where.diploma = diploma;
     }
 
     if (search) {
@@ -48,10 +52,21 @@ export class AlumniService {
 
     return this.alumniProfileModel.findAll({
       where,
-      attributes: isAlumni ? ['id', 'user_id', 'first_name', 'last_name', 'current_position', 'promo_year'] : undefined,
+      attributes: isAlumni
+        ? ['id', 'user_id', 'first_name', 'last_name', 'current_position', 'promo_year', 'diploma']
+        : undefined,
       include: isAlumni ? [] : [{ model: User, attributes: ['id', 'email', 'is_active'] }],
       order: [['last_name', 'ASC']],
     });
+  }
+
+  async getDistinctDiplomasByYear(year: number) {
+    const result = await this.alumniProfileModel.findAll({
+      where: { promo_year: year },
+      attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('diploma')), 'diploma']],
+      raw: true,
+    });
+    return result.map((r: any) => r.diploma).filter((d) => !!d);
   }
 
   async findOne(id: string) {

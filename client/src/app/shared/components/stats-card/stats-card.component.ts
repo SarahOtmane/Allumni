@@ -22,33 +22,11 @@ import { CommonModule } from '@angular/common';
               [class]="trendPositive ? 'text-emerald-600 bg-emerald-50' : 'text-rose-600 bg-rose-50'"
               class="flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold"
             >
-              <svg
-                *ngIf="trendPositive"
-                class="w-3 h-3 mr-1"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="3"
-                  d="M5 10l7-7m0 0l7 7m-7-7v18"
-                />
+              <svg *ngIf="trendPositive" class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 10l7-7m0 0l7 7m-7-7v18" />
               </svg>
-              <svg
-                *ngIf="!trendPositive"
-                class="w-3 h-3 mr-1"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="3"
-                  d="M19 14l-7 7m0 0l-7-7m7 7V3"
-                />
+              <svg *ngIf="!trendPositive" class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
               </svg>
               {{ trend }}
             </div>
