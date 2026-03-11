@@ -18,7 +18,10 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "seed:admin": "ts-node src/scripts/seed-admin.ts"
+    "migrate": "sequelize-cli db:migrate",
+    "migrate:undo": "sequelize-cli db:migrate:undo",
+    "migrate:status": "sequelize-cli db:migrate:status",
+    "seed:admin": "npx ts-node src/scripts/seed-admin.ts"
   },
   "dependencies": {
     "@nestjs-modules/mailer": "^2.0.2",

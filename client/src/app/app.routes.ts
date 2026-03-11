@@ -74,6 +74,11 @@ export const routes: Routes = [
         path: 'messages',
         loadComponent: () => import('./features/alumni/chat/chat.component').then((m) => m.AlumniChatComponent),
       },
+      {
+        path: 'scraping-guide',
+        loadComponent: () =>
+          import('./features/admin/scraping-guide/scraping-guide.component').then((m) => m.ScrapingGuideComponent),
+      },
     ],
   },
 

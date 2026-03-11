@@ -42,6 +42,9 @@ export class AlumniProfile extends Model {
   @Column({ type: DataType.STRING })
   company: string;
 
+  @Column({ type: DataType.JSON, allowNull: true })
+  experiences: any;
+
   @Column({
     type: DataType.ENUM('OPEN_TO_WORK', 'HIRED', 'STUDENT', 'UNKNOWN'),
     defaultValue: 'UNKNOWN',
@@ -50,4 +53,7 @@ export class AlumniProfile extends Model {
 
   @Column({ type: DataType.BOOLEAN, defaultValue: false })
   data_enriched: boolean;
+
+  @Column({ type: DataType.DATE, allowNull: true })
+  last_scraped_at: Date;
 }

@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AlumniService, Alumni } from '../../../../core/services/alumni.service';
@@ -31,44 +31,58 @@ export interface ImportSummary {
           <h1 class="text-2xl font-bold text-gray-900">Promotion {{ year() }}</h1>
         </div>
 
-        @if (authService.currentUser()?.role === 'ADMIN') {
-          <button
-            (click)="showImportModal.set(true)"
-            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm"
-          >
-            <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-              />
-            </svg>
-            Importer via CSV
-          </button>
-        }
-      </header>
-      @if (importSummary()) {
-        <div class="mb-6 bg-white border rounded-lg p-4 shadow-sm">
-          <h3 class="font-bold text-lg mb-2">Résultat de l'import :</h3>
-          <div class="flex space-x-4 mb-4">
-            <span class="text-green-600 font-medium">{{ importSummary()!.success }} Succès</span>
-            <span class="text-red-600 font-medium">{{ importSummary()!.failed }} Échecs</span>
-          </div>
-          @if (importSummary()!.errorDetails.length > 0) {
-            <div class="bg-red-50 p-3 rounded text-xs text-red-700 max-h-40 overflow-y-auto">
-              <ul>
-                @for (err of importSummary()!.errorDetails; track err) {
-                  <li>• {{ err }}</li>
-                }
-              </ul>
-            </div>
+        <div class="flex space-x-3">
+          @if (authService.currentUser()?.role === 'ADMIN') {
+            <button
+              (click)="onExportForApify()"
+              class="inline-flex items-center px-4 py-2 border border-indigo-600 text-sm font-medium rounded-md text-indigo-600 bg-white hover:bg-indigo-50 shadow-sm"
+              title="Télécharger les URLs LinkedIn pour Apify"
+            >
+              <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 16v1a2 2 0 002 2h10a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
+              </svg>
+              Export Apify
+            </button>
+
+            <button
+              (click)="triggerJsonInput()"
+              class="inline-flex items-center px-4 py-2 border border-green-600 text-sm font-medium rounded-md text-green-600 bg-white hover:bg-green-50 shadow-sm"
+              title="Importer le résultat JSON d'Apify"
+            >
+              <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 16v1a2 2 0 002 2h10a2 2 0 002-2v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                />
+              </svg>
+              Import Apify
+            </button>
+            <input type="file" #jsonInput class="hidden" accept=".json" (change)="onJsonFileSelected($event)" />
+
+            <button
+              (click)="showImportModal.set(true)"
+              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm"
+            >
+              <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                />
+              </svg>
+              Importer CSV
+            </button>
           }
-          <button (click)="importSummary.set(null)" class="mt-4 text-xs text-gray-500 hover:underline">
-            Fermer le rapport
-          </button>
         </div>
-      }
+      </header>
 
       <div class="bg-white shadow overflow-hidden sm:rounded-lg border border-gray-200">
         <div class="overflow-x-auto">
@@ -78,14 +92,13 @@ export interface ImportSummary {
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Nom / Prénom
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LinkedIn</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Diplôme</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Poste / Entreprise
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Enrichi</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
+                  Enrichi
+                </th>
                 <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
@@ -96,7 +109,6 @@ export interface ImportSummary {
                     <div class="font-bold text-gray-900">{{ alumnus.last_name | uppercase }}</div>
                     <div class="text-gray-500">{{ alumnus.first_name }}</div>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ alumnus.user?.email }}</td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     @if (alumnus.linkedin_url) {
                       <a
@@ -104,34 +116,33 @@ export interface ImportSummary {
                         target="_blank"
                         class="text-indigo-600 hover:text-indigo-900 flex items-center"
                       >
-                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                          <path
-                            d="M19 0h-14c-2.761 0-4 1.239-4 4v14c0 2.761 1.239 4 4 4h14c2.761 0 4-1.239 4-4v-14c0-2.761-1.239-4-4-4zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"
-                          />
-                        </svg>
+                        Voir Profil
                       </a>
                     } @else {
                       <span class="text-gray-300 italic text-xs">Non renseigné</span>
                     }
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ alumnus.diploma }}</td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm">
                     @if (alumnus.current_position || alumnus.company) {
                       <div class="text-gray-900 font-medium">{{ alumnus.current_position || '-' }}</div>
                       <div class="text-xs text-gray-500">{{ alumnus.company || '-' }}</div>
                     } @else {
-                      <span class="text-gray-300 italic text-xs">En attente de scraping</span>
+                      <span class="text-gray-300 italic text-xs">En attente de données</span>
                     }
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
                     @if (alumnus.data_enriched) {
                       <span class="text-green-500" title="Données enrichies">
-                        <svg class="h-5 w-5 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        <svg class="h-5 w-5 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                          <path
+                            fill-rule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clip-rule="evenodd"
+                          />
                         </svg>
                       </span>
                     } @else {
-                      <span class="text-yellow-500 animate-pulse" title="Scraping en cours ou à venir">
+                      <span class="text-gray-300" title="Non enrichi">
                         <svg class="h-5 w-5 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path
                             stroke-linecap="round"
@@ -143,66 +154,31 @@ export interface ImportSummary {
                       </span>
                     }
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span
-                      [ngClass]="alumnus.user?.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'"
-                      class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                    >
-                      {{ alumnus.user?.is_active ? 'Actif' : 'En attente' }}
-                    </span>
-                  </td>
                   <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
-                      (click)="onContactAlumni(alumnus.user_id)"
+                      (click)="onShowDetails(alumnus)"
                       class="text-indigo-600 hover:text-indigo-900 mr-3"
-                      title="Contacter"
+                      title="Détails du parcours"
                     >
-                      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                        />
-                      </svg>
+                      Détails
                     </button>
                     @if (authService.currentUser()?.role === 'ADMIN') {
                       <button
                         (click)="onEditAlumnus(alumnus)"
-                        class="text-indigo-600 hover:text-indigo-900 mr-3"
+                        class="text-gray-600 hover:text-gray-900 mr-3"
                         title="Modifier"
                       >
-                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                          />
-                        </svg>
+                        Modifier
                       </button>
-                      <button
-                        (click)="onDeleteClick(alumnus.id)"
-                        class="text-red-600 hover:text-red-900"
-                        title="Supprimer"
-                      >
-                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h14"
-                          />
-                        </svg>
+                      <button (click)="onDeleteClick(alumnus.id)" class="text-red-600 hover:text-red-900" title="Supprimer">
+                        Supprimer
                       </button>
-                    } @else {
-                      <span class="text-gray-300 italic text-xs">Lecture seule</span>
                     }
                   </td>
                 </tr>
               } @empty {
                 <tr>
-                  <td colspan="8" class="px-6 py-12 text-center text-gray-500 italic">
+                  <td colspan="5" class="px-6 py-12 text-center text-gray-500 italic">
                     Pas d'étudiants ajoutés pour cette promotion.
                   </td>
                 </tr>
@@ -212,6 +188,59 @@ export interface ImportSummary {
         </div>
       </div>
     </div>
+
+    <!-- Details Modal -->
+    @if (detailsAlumnus()) {
+      <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+          <div
+            class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+            aria-hidden="true"
+            (click)="detailsAlumnus.set(null)"
+          ></div>
+          <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+          <div
+            class="inline-block align-middle bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full"
+          >
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+              <div class="sm:flex sm:items-start">
+                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                  <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                    Parcours de {{ detailsAlumnus()?.first_name }} {{ detailsAlumnus()?.last_name }}
+                  </h3>
+                  <div class="mt-4 border-t border-gray-100 pt-4">
+                    <div class="space-y-6">
+                      @for (exp of (detailsAlumnus()?.experiences || []); track $index) {
+                        <div class="relative pl-8 border-l-2 border-indigo-100 pb-2">
+                          <div class="absolute -left-2 top-0 h-4 w-4 rounded-full bg-indigo-500"></div>
+                          <h4 class="font-bold text-gray-900">{{ exp.title }}</h4>
+                          <p class="text-indigo-600 text-sm font-medium">{{ exp.company }}</p>
+                          <p class="text-gray-500 text-xs mt-1">{{ exp.duration }}</p>
+                          @if (exp.description) {
+                            <p class="text-gray-600 text-sm mt-2 italic whitespace-pre-line">{{ exp.description }}</p>
+                          }
+                        </div>
+                      } @empty {
+                        <p class="text-center text-gray-500 italic py-8">Aucune expérience répertoriée.</p>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+              <button
+                type="button"
+                (click)="detailsAlumnus.set(null)"
+                class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
 
     @if (showImportModal()) {
       <app-csv-instructions-modal (modalClosed)="showImportModal.set(false)" (fileUploaded)="onFileUploaded($event)" />
@@ -237,6 +266,8 @@ export interface ImportSummary {
   `,
 })
 export class PromoDetailComponent implements OnInit {
+  @ViewChild('jsonInput') jsonInput!: ElementRef<HTMLInputElement>;
+
   private route = inject(ActivatedRoute);
   private alumniService = inject(AlumniService);
   private chatService = inject(ChatService);
@@ -248,6 +279,7 @@ export class PromoDetailComponent implements OnInit {
   showImportModal = signal(false);
   importSummary = signal<ImportSummary | null>(null);
   selectedAlumnus = signal<Alumni | null>(null);
+  detailsAlumnus = signal<Alumni | null>(null);
   alumnusIdToDelete = signal<string | null>(null);
 
   ngOnInit() {
@@ -272,14 +304,64 @@ export class PromoDetailComponent implements OnInit {
     });
   }
 
-  onEditAlumnus(alumnus: Alumni) {
-    this.selectedAlumnus.set(alumnus);
+  onExportForApify() {
+    console.log('Export button clicked for year:', this.year());
+    this.alumniService.getLinkedinUrls(this.year()).subscribe({
+      next: (data) => {
+        console.log('Received URLs from server:', data);
+        if (!data.profileUrls || data.profileUrls.length === 0) {
+          alert("Aucune URL LinkedIn trouvée pour cette promotion.");
+          return;
+        }
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `linkedin-urls-promo-${this.year()}.json`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        console.log('Download triggered');
+      },
+      error: (err) => {
+        console.error('Error fetching URLs:', err);
+        alert("Erreur lors de l'exportation des URLs.");
+      }
+    });
   }
 
-  onContactAlumni(userId: string) {
-    this.chatService.createConversation(userId).subscribe((conv) => {
-      this.router.navigate(['/admin/messages'], { queryParams: { id: conv.id } });
-    });
+  triggerJsonInput() {
+    this.jsonInput.nativeElement.click();
+  }
+
+  onJsonFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        this.alumniService.importScrapedData(data).subscribe({
+          next: (res) => {
+            alert(`${res.updated} profils mis à jour avec succès !`);
+            this.loadAlumni();
+            event.target.value = ''; // Reset input
+          },
+          error: (err) => alert("Erreur lors de l'importation du JSON Apify"),
+        });
+      } catch (error) {
+        alert("Le fichier JSON n'est pas valide.");
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  onShowDetails(alumnus: Alumni) {
+    this.detailsAlumnus.set(alumnus);
+  }
+
+  onEditAlumnus(alumnus: Alumni) {
+    this.selectedAlumnus.set(alumnus);
   }
 
   onAlumnusSaved() {

@@ -187,4 +187,56 @@ export class AlumniService {
         });
     });
   }
+
+  async getLinkedinUrls(year: number) {
+    const profiles = await this.alumniProfileModel.findAll({
+      where: { promo_year: year },
+      attributes: ['linkedin_url'],
+    });
+
+    return {
+      profileUrls: profiles
+        .map((p) => p.linkedin_url)
+        .filter((url) => !!url && url.trim() !== ''),
+    };
+  }
+
+  async importScrapedData(scrapedData: any[]) {
+    const summary = { updated: 0, skipped: 0 };
+
+    for (const item of scrapedData) {
+      const url = item.linkedinUrl || item.linkedinPublicUrl;
+      if (!url) {
+        summary.skipped++;
+        continue;
+      }
+
+      const profile = await this.alumniProfileModel.findOne({
+        where: { linkedin_url: url },
+      });
+
+      if (profile) {
+        // Extraction des expériences adaptée au format Apify fourni
+        const experiences = (item.experiences || []).map((exp: any) => ({
+          title: exp.title,
+          company: exp.companyName || exp.company,
+          duration: exp.duration || `${exp.jobStartedOn || ''} - ${exp.jobEndedOn || (exp.jobStillWorking ? 'Present' : '')}`,
+          description: exp.jobDescription || exp.description || '',
+        }));
+
+        await profile.update({
+          current_position: item.jobTitle || item.headline || profile.current_position,
+          company: item.companyName || item.company || profile.company,
+          experiences: experiences,
+          data_enriched: true,
+          last_scraped_at: new Date(),
+        });
+        summary.updated++;
+      } else {
+        summary.skipped++;
+      }
+    }
+
+    return summary;
+  }
 }

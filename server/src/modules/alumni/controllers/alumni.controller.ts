@@ -18,6 +18,7 @@ import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Express } from 'express';
 import { UpdateAlumniDto } from '../dto/update-alumni.dto';
 
 @Controller('alumni')
@@ -35,6 +36,12 @@ export class AlumniController {
   @Roles('ADMIN')
   createPromo(@Body('year', ParseIntPipe) year: number) {
     return this.alumniService.createPromo(year);
+  }
+
+  @Get('promos/:year/linkedin-urls')
+  @Roles('ADMIN')
+  getLinkedinUrls(@Param('year', ParseIntPipe) year: number) {
+    return this.alumniService.getLinkedinUrls(year);
   }
 
   @Get('promos/:year')
@@ -60,5 +67,11 @@ export class AlumniController {
   @UseInterceptors(FileInterceptor('file'))
   importCsv(@Param('year', ParseIntPipe) year: number, @UploadedFile() file: Express.Multer.File) {
     return this.alumniService.importCsv(year, file.buffer);
+  }
+
+  @Post('import-scraped-data')
+  @Roles('ADMIN')
+  importScrapedData(@Body() data: any[]) {
+    return this.alumniService.importScrapedData(data);
   }
 }

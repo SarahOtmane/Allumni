@@ -7,7 +7,7 @@ services:
       dockerfile: client/Dockerfile
       target: builder
     # Launch from root using workspace
-    command: npm run start -w client -- --host 0.0.0.0 --poll 2000
+    command: npm run start -w client -- --host 0.0.0.0 --poll 5000 --disable-host-check
     volumes:
       - .:/app
       - /app/client/node_modules # Protect container modules
