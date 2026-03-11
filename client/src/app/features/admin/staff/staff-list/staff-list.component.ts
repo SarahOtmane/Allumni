@@ -23,7 +23,7 @@ import { Router } from '@angular/router';
       </header>
 
       <!-- Formulaire d'invitation rapide -->
-      @if (authService.currentUser()?.role === 'ADMIN' || authService.currentUser()?.role === 'STAFF') {
+      @if (authService.currentUser()?.role === 'ADMIN') {
         <section class="mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
           <div class="flex items-center space-x-3 mb-6">
             <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
@@ -172,7 +172,7 @@ import { Router } from '@angular/router';
                         </svg>
                       </button>
                     }
-                    @if (member.role === 'STAFF') {
+                    @if (authService.currentUser()?.role === 'ADMIN' && member.role === 'STAFF') {
                       <button
                         (click)="onDeleteClick(member.id!)"
                         class="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
@@ -187,6 +187,17 @@ import { Router } from '@angular/router';
                           />
                         </svg>
                       </button>
+                    } @else if (member.role === 'STAFF') {
+                      <div class="p-2 text-gray-200" title="Seul un administrateur peut supprimer un membre">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                          />
+                        </svg>
+                      </div>
                     } @else {
                       <div class="p-2 text-gray-200" title="Les administrateurs sont protégés">
                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
