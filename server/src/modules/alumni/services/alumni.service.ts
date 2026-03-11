@@ -86,7 +86,17 @@ export class AlumniService {
     return this.alumniProfileModel.findAll({
       where,
       attributes: isAlumni
-        ? ['id', 'user_id', 'first_name', 'last_name', 'current_position', 'company', 'promo_year', 'diploma', 'linkedin_url']
+        ? [
+            'id',
+            'user_id',
+            'first_name',
+            'last_name',
+            'current_position',
+            'company',
+            'promo_year',
+            'diploma',
+            'linkedin_url',
+          ]
         : [
             'id',
             'user_id',
@@ -295,9 +305,7 @@ export class AlumniService {
     });
 
     return {
-      profileUrls: profiles
-        .map((p) => p.linkedin_url)
-        .filter((url) => !!url && url.trim() !== ''),
+      profileUrls: profiles.map((p) => p.linkedin_url).filter((url) => !!url && url.trim() !== ''),
     };
   }
 
@@ -308,14 +316,15 @@ export class AlumniService {
     for (const item of scrapedData) {
       const rawUrl = item.linkedinUrl || item.linkedinPublicUrl || item.url;
       if (!rawUrl) {
-        console.warn('[IMPORT] Entrée sautée : pas d\'URL trouvée', item);
+        console.warn("[IMPORT] Entrée sautée : pas d'URL trouvée", item);
         summary.skipped++;
         continue;
       }
 
       // Nettoyage agressif de l'URL pour la comparaison
       // On enlève le protocole, le www, et le slash final
-      const cleanUrl = rawUrl.toLowerCase()
+      const cleanUrl = rawUrl
+        .toLowerCase()
         .replace(/^https?:\/\//, '')
         .replace(/^www\./, '')
         .replace(/\/$/, '')
@@ -327,8 +336,8 @@ export class AlumniService {
       const profile = await this.alumniProfileModel.findOne({
         where: {
           linkedin_url: {
-            [Op.like]: `%${cleanUrl}%`
-          }
+            [Op.like]: `%${cleanUrl}%`,
+          },
         },
       });
 
