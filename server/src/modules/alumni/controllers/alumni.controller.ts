@@ -19,11 +19,15 @@ import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateAlumniDto } from '../dto/update-alumni.dto';
+import { ScrapingService } from '../../scraping/services/scraping.service';
 
 @Controller('alumni')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class AlumniController {
-  constructor(private readonly alumniService: AlumniService) {}
+  constructor(
+    private readonly alumniService: AlumniService,
+    private readonly scrapingService: ScrapingService,
+  ) {}
 
   @Get('promos')
   @Roles('ADMIN', 'STAFF', 'ALUMNI')
@@ -64,6 +68,14 @@ export class AlumniController {
   @Roles('ADMIN')
   remove(@Param('id') id: string) {
     return this.alumniService.remove(id);
+  }
+
+  @Post(':id/scrape')
+  @Roles('ADMIN', 'STAFF')
+  async triggerScrape(@Param('id') id: string) {
+    const profile = await this.alumniService.findOne(id);
+    await this.scrapingService.addScrapingJob(profile.id, profile.linkedin_url);
+    return { message: 'Scraping job enqueued successfully' };
   }
 
   @Post('import/:year')

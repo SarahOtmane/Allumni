@@ -10,8 +10,6 @@ services:
     command: npm run start -w client -- --host 0.0.0.0 --poll 2000
     volumes:
       - .:/app
-      - /app/client/node_modules # Protect container modules
-      - /app/node_modules        # Protect root modules
     ports:
       - "4200:4200"
 
@@ -24,8 +22,6 @@ services:
     command: npm run start:dev -w server
     volumes:
       - .:/app
-      - /app/server/node_modules # Protect container modules
-      - /app/node_modules        # Protect root modules
     ports:
       - "3000:3000"
     env_file:

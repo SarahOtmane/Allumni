@@ -1,13 +1,15 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AlumniService, Alumni } from '../../../../core/services/alumni.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { CsvInstructionsModalComponent } from '../../../../shared/components/csv-instructions-modal/csv-instructions-modal.component';
 import { AlumniEditModalComponent } from '../alumni-edit-modal/alumni-edit-modal.component';
+import { AlumniDetailModalComponent } from '../alumni-detail-modal/alumni-detail-modal.component';
 import { ConfirmModalComponent } from '../../../../shared/components/confirm-modal/confirm-modal.component';
 import { ChatService } from '../../../../core/services/chat.service';
 import { Router } from '@angular/router';
+import { interval, Subscription } from 'rxjs';
 
 export interface ImportSummary {
   success: number;
@@ -17,7 +19,14 @@ export interface ImportSummary {
 
 @Component({
   standalone: true,
-  imports: [CommonModule, RouterLink, CsvInstructionsModalComponent, AlumniEditModalComponent, ConfirmModalComponent],
+  imports: [
+    CommonModule,
+    RouterLink,
+    CsvInstructionsModalComponent,
+    AlumniEditModalComponent,
+    AlumniDetailModalComponent,
+    ConfirmModalComponent,
+  ],
   template: `
     <div class="p-10 bg-gray-50/30 min-h-screen">
       <header class="mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
@@ -160,6 +169,9 @@ export interface ImportSummary {
                 <th class="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
                   Poste Actuel
                 </th>
+                <th class="px-8 py-5 text-center text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                  Scraping
+                </th>
                 <th class="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
                   Statut
                 </th>
@@ -212,25 +224,79 @@ export interface ImportSummary {
                     </span>
                   </td>
                   <td class="px-8 py-6">
-                    @if (alumnus.current_position) {
-                      <div class="text-sm font-bold text-gray-900 tracking-tight">{{ alumnus.current_position }}</div>
+                    @if (alumnus.scraping_status === 'COMPLETED' || alumnus.current_position || alumnus.company) {
+                      <div class="text-sm font-bold text-gray-900 tracking-tight">
+                        {{ alumnus.current_position || '-' }}
+                      </div>
                       <div class="text-[10px] font-black text-indigo-500 uppercase tracking-widest mt-0.5">
-                        {{ alumnus.company }}
+                        {{ alumnus.company || '-' }}
+                      </div>
+                    } @else if (alumnus.scraping_status === 'FAILED') {
+                      <div class="text-[10px] font-bold text-rose-500 uppercase tracking-widest italic">
+                        Échec scraping
                       </div>
                     } @else {
-                      <div
-                        class="flex items-center text-[10px] font-bold text-amber-500 uppercase tracking-widest italic animate-pulse"
-                      >
-                        <svg class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <div class="text-[10px] font-bold text-gray-300 uppercase tracking-widest italic animate-pulse">
+                        En attente...
+                      </div>
+                    }
+                  </td>
+                  <td class="px-8 py-6 text-center">
+                    @if (alumnus.scraping_status === 'COMPLETED') {
+                      <div class="flex flex-col items-center">
+                        <span class="text-emerald-500" title="Données enrichies">
+                          <svg class="h-5 w-5 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </span>
+                        <button
+                          (click)="onRetryScrape(alumnus.id)"
+                          class="text-[10px] font-black text-gray-400 hover:text-indigo-600 uppercase tracking-widest mt-1 transition-colors"
+                        >
+                          Refaire
+                        </button>
+                      </div>
+                    } @else if (alumnus.scraping_status === 'PROCESSING') {
+                      <span class="text-indigo-500 animate-spin inline-block" title="Scraping en cours">
+                        <svg class="h-5 w-5 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
-                            d="M13 10V3L4 14h7v7l9-11h-7z"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                           />
                         </svg>
-                        Enrichissement...
+                      </span>
+                    } @else if (alumnus.scraping_status === 'FAILED') {
+                      <div class="flex flex-col items-center">
+                        <span class="text-rose-500" [title]="alumnus.scraping_error">
+                          <svg class="h-5 w-5 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                        </span>
+                        <button
+                          (click)="onRetryScrape(alumnus.id)"
+                          class="text-[10px] font-black text-indigo-600 hover:underline uppercase tracking-widest mt-1 transition-colors"
+                        >
+                          Réessayer
+                        </button>
                       </div>
+                    } @else {
+                      <span class="text-amber-500 animate-pulse inline-block" title="En attente">
+                        <svg class="h-5 w-5 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                      </span>
                     }
                   </td>
                   <td class="px-8 py-6">
@@ -248,6 +314,20 @@ export interface ImportSummary {
                   </td>
                   <td class="px-8 py-6 text-right">
                     <div class="flex justify-end space-x-2">
+                      <button
+                        (click)="onViewDetail(alumnus)"
+                        class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
+                        title="Détails"
+                      >
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01m-.01 4h.01"
+                          />
+                        </svg>
+                      </button>
                       <button
                         (click)="onContactAlumni(alumnus.user_id)"
                         class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
@@ -297,7 +377,7 @@ export interface ImportSummary {
                 </tr>
               } @empty {
                 <tr>
-                  <td colspan="5" class="px-8 py-20 text-center">
+                  <td colspan="7" class="px-8 py-20 text-center">
                     <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
                       <svg class="h-10 w-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path
@@ -331,6 +411,10 @@ export interface ImportSummary {
       />
     }
 
+    @if (selectedAlumnusForDetail()) {
+      <app-alumni-detail-modal [alumnus]="selectedAlumnusForDetail()!" (closed)="selectedAlumnusForDetail.set(null)" />
+    }
+
     @if (alumnusIdToDelete()) {
       <app-confirm-modal
         title="Supprimer l'étudiant"
@@ -342,7 +426,7 @@ export interface ImportSummary {
     }
   `,
 })
-export class PromoDetailComponent implements OnInit {
+export class PromoDetailComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private alumniService = inject(AlumniService);
   private chatService = inject(ChatService);
@@ -357,7 +441,10 @@ export class PromoDetailComponent implements OnInit {
   showImportModal = signal(false);
   importSummary = signal<ImportSummary | null>(null);
   selectedAlumnus = signal<Alumni | null>(null);
+  selectedAlumnusForDetail = signal<Alumni | null>(null);
   alumnusIdToDelete = signal<string | null>(null);
+
+  private refreshSubscription?: Subscription;
 
   ngOnInit() {
     this.route.params.subscribe((params) => {
@@ -365,6 +452,20 @@ export class PromoDetailComponent implements OnInit {
       this.loadAlumni();
       this.loadDiplomas();
     });
+
+    // Auto-refresh every 5 seconds if any alumnus is being processed or pending
+    this.refreshSubscription = interval(5000).subscribe(() => {
+      const needsRefresh = this.alumni().some(
+        (a) => a.scraping_status === 'PROCESSING' || a.scraping_status === 'PENDING',
+      );
+      if (needsRefresh) {
+        this.loadAlumni();
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    this.refreshSubscription?.unsubscribe();
   }
 
   loadAlumni() {
@@ -389,6 +490,13 @@ export class PromoDetailComponent implements OnInit {
     this.loadAlumni();
   }
 
+  onRetryScrape(id: string) {
+    this.alumniService.triggerScraping(id).subscribe({
+      next: () => this.loadAlumni(),
+      error: (err) => alert('Erreur lors de la relance : ' + (err.error?.message || 'Inconnue')),
+    });
+  }
+
   onFileUploaded(file: File) {
     this.showImportModal.set(false);
     this.alumniService.importCsv(this.year(), file).subscribe({
@@ -402,6 +510,10 @@ export class PromoDetailComponent implements OnInit {
 
   onEditAlumnus(alumnus: Alumni) {
     this.selectedAlumnus.set(alumnus);
+  }
+
+  onViewDetail(alumnus: Alumni) {
+    this.selectedAlumnusForDetail.set(alumnus);
   }
 
   onContactAlumni(userId: string) {

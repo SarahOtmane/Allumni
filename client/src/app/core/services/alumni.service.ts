@@ -6,6 +6,15 @@ export interface Promotion {
   year: number;
 }
 
+export interface AlumniExperience {
+  id: string;
+  title: string;
+  company: string;
+  start_date: string;
+  end_date?: string;
+  is_current: boolean;
+}
+
 export interface Alumni {
   id: string;
   user_id: string;
@@ -18,10 +27,13 @@ export interface Alumni {
   company?: string;
   status: string;
   data_enriched: boolean;
+  scraping_status?: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  scraping_error?: string;
   user?: {
     email: string;
     is_active: boolean;
   };
+  experiences?: AlumniExperience[];
 }
 
 @Injectable({
@@ -60,6 +72,10 @@ export class AlumniService {
 
   deleteAlumni(id: string) {
     return this.http.delete(`${this.apiUrl}/${id}`);
+  }
+
+  triggerScraping(id: string) {
+    return this.http.post(`${this.apiUrl}/${id}/scrape`, {});
   }
 
   importCsv(year: number, file: File) {
