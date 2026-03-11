@@ -88,7 +88,7 @@ export class AlumniService {
     return this.http.get<{ profileUrls: string[] }>(`${this.apiUrl}/promos/${year}/linkedin-urls`);
   }
 
-  importScrapedData(data: any[]) {
+  importScrapedData(data: unknown[]) {
     return this.http.post<{ updated: number; skipped: number }>(`${this.apiUrl}/import-scraped-data`, data);
   }
 }
