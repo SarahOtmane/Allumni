@@ -32,6 +32,12 @@ export class AlumniExperience extends Model {
   @Column({ type: DataType.DATEONLY, allowNull: true })
   end_date: string;
 
+  @Column({ type: DataType.STRING, allowNull: true })
+  duration: string;
+
+  @Column({ type: DataType.TEXT, allowNull: true })
+  description: string;
+
   @Column({ type: DataType.BOOLEAN, defaultValue: false })
   is_current: boolean;
 }

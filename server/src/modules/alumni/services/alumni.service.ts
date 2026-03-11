@@ -303,28 +303,61 @@ export class AlumniService {
 
   async importScrapedData(scrapedData: any[]) {
     const summary = { updated: 0, skipped: 0 };
+    console.log(`[IMPORT] Début de l'importation de ${scrapedData.length} entrées Apify`);
 
     for (const item of scrapedData) {
-      const url = item.linkedinUrl || item.linkedinPublicUrl;
-      if (!url) {
+      const rawUrl = item.linkedinUrl || item.linkedinPublicUrl || item.url;
+      if (!rawUrl) {
+        console.warn('[IMPORT] Entrée sautée : pas d\'URL trouvée', item);
         summary.skipped++;
         continue;
       }
 
+      // Nettoyage agressif de l'URL pour la comparaison
+      // On enlève le protocole, le www, et le slash final
+      const cleanUrl = rawUrl.toLowerCase()
+        .replace(/^https?:\/\//, '')
+        .replace(/^www\./, '')
+        .replace(/\/$/, '')
+        .trim();
+
+      console.log(`[IMPORT] Recherche d'un profil pour l'URL nettoyée : ${cleanUrl} (Originale: ${rawUrl})`);
+
+      // On cherche un profil dont l'URL linkedin contient cette chaîne nettoyée
       const profile = await this.alumniProfileModel.findOne({
-        where: { linkedin_url: url },
+        where: {
+          linkedin_url: {
+            [Op.like]: `%${cleanUrl}%`
+          }
+        },
       });
 
       if (profile) {
+        console.log(`[IMPORT] Profil trouvé ! ID: ${profile.id}, Nom: ${profile.last_name}`);
         const transaction = await this.sequelize.transaction();
         try {
-          // Extraction des expériences adaptée au format Apify fourni
+          // Extraction des expériences
           const experiencesData = (item.experiences || []).map((exp: any) => {
-            // Tentative de parsing des dates simpliste pour le format DATEONLY
-            // On utilise is_current si end_date est absente ou "Present"
-            const startDate = exp.jobStartedOn ? new Date(exp.jobStartedOn).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
-            const isCurrent = !exp.jobEndedOn || exp.jobStillWorking;
-            const endDate = (!isCurrent && exp.jobEndedOn) ? new Date(exp.jobEndedOn).toISOString().split('T')[0] : null;
+            // Fonction utilitaire pour parser le format MM-YYYY ou ISO
+            const parseLinkedInDate = (dateStr: string) => {
+              if (!dateStr || dateStr === 'Present') return null;
+              if (dateStr.includes('-')) {
+                const [month, year] = dateStr.split('-');
+                if (month && year && month.length <= 2 && year.length === 4) {
+                  return `${year}-${month.padStart(2, '0')}-01`;
+                }
+              }
+              try {
+                const d = new Date(dateStr);
+                return isNaN(d.getTime()) ? null : d.toISOString().split('T')[0];
+              } catch {
+                return null;
+              }
+            };
+
+            const startDate = parseLinkedInDate(exp.jobStartedOn) || new Date().toISOString().split('T')[0];
+            const isCurrent = !exp.jobEndedOn || exp.jobStillWorking || exp.jobEndedOn === 'Present';
+            const endDate = isCurrent ? null : parseLinkedInDate(exp.jobEndedOn);
 
             return {
               alumni_id: profile.id,
@@ -332,17 +365,17 @@ export class AlumniService {
               company: exp.companyName || exp.company || 'Inconnu',
               start_date: startDate,
               end_date: endDate,
+              duration: exp.duration || '',
+              description: exp.jobDescription || exp.description || '',
               is_current: isCurrent,
             };
           });
 
-          // Supprimer les anciennes expériences avant d'ajouter les nouvelles
           await this.alumniExperienceModel.destroy({
             where: { alumni_id: profile.id },
             transaction,
           });
 
-          // Créer les nouvelles expériences
           if (experiencesData.length > 0) {
             await this.alumniExperienceModel.bulkCreate(experiencesData, { transaction });
           }
@@ -362,14 +395,16 @@ export class AlumniService {
           summary.updated++;
         } catch (error) {
           await transaction.rollback();
-          console.error(`Erreur lors de la mise à jour du profil ${url}:`, error);
+          console.error(`[IMPORT] Erreur lors de la mise à jour du profil ${rawUrl}:`, error);
           summary.skipped++;
         }
       } else {
+        console.warn(`[IMPORT] Aucun profil trouvé en base pour "${cleanUrl}"`);
         summary.skipped++;
       }
     }
 
+    console.log(`[IMPORT] Terminé : ${summary.updated} mis à jour, ${summary.skipped} sautés`);
     return summary;
   }
 }
