@@ -551,7 +551,7 @@ export class PromoDetailComponent implements OnInit, OnDestroy {
     this.alumniService.getLinkedinUrls(this.year()).subscribe({
       next: (data) => {
         if (!data.profileUrls || data.profileUrls.length === 0) {
-          alert("Aucune URL LinkedIn trouvée pour cette promotion.");
+          alert('Aucune URL LinkedIn trouvée pour cette promotion.');
           return;
         }
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -562,9 +562,9 @@ export class PromoDetailComponent implements OnInit, OnDestroy {
         a.click();
         window.URL.revokeObjectURL(url);
       },
-      error: (err) => {
+      error: () => {
         alert("Erreur lors de l'exportation des URLs.");
-      }
+      },
     });
   }
 
@@ -572,23 +572,24 @@ export class PromoDetailComponent implements OnInit, OnDestroy {
     this.jsonInput.nativeElement.click();
   }
 
-  onJsonFileSelected(event: any) {
-    const file = event.target.files[0];
+  onJsonFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e: any) => {
+    reader.onload = (e: ProgressEvent<FileReader>) => {
       try {
-        const data = JSON.parse(e.target.result);
+        const data = JSON.parse(e.target?.result as string);
         this.alumniService.importScrapedData(data).subscribe({
           next: (res) => {
             alert(`${res.updated} profils mis à jour avec succès !`);
             this.loadAlumni();
-            event.target.value = ''; // Reset input
+            input.value = ''; // Reset input
           },
-          error: (err) => alert("Erreur lors de l'importation du JSON Apify"),
+          error: () => alert("Erreur lors de l'importation du JSON Apify"),
         });
-      } catch (error) {
+      } catch {
         alert("Le fichier JSON n'est pas valide.");
       }
     };

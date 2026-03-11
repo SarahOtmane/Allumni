@@ -1,13 +1,12 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdminService, DashboardStats } from '../services/admin.service';
-import { StatsCardComponent } from '../../../shared/components/stats-card/stats-card.component';
 import { DashboardLoadingComponent } from './dashboard.loading';
 import { RouterLink } from '@angular/router';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, StatsCardComponent, DashboardLoadingComponent, RouterLink],
+  imports: [CommonModule, DashboardLoadingComponent, RouterLink],
   template: `
     <div class="p-8 bg-[#F8FAFC] min-h-screen font-sans selection:bg-indigo-100">
       <!-- TOP NAV / WELCOME SECTION -->
